@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgroSense — Smart Farming Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p:#2E7D32;--pd:#1B5E20;--ph:#245F27;
+  --s:#4CAF50;--sl:#C8E6C9;--sa:#81C784;
+  --bg:#F5F7FA;--sf:#FFFFFF;
+  --tx:#1C2B1E;--mu:#747970;--bd:#E0E5E0;
+  --dr:#D32F2F;--wa:#F9A825;
+  --g1:#43A047;--g2:#2E7D32;--g3:#1B5E20;
+  --gradient:linear-gradient(135deg,#43A047 0%,#2E7D32 50%,#1B5E20 100%);
+  --gradient-light:linear-gradient(135deg,#E8F5E9 0%,#C8E6C9 50%,#A5D6A7 100%);
+  --shadow-glow:0 20px 60px rgba(46,125,50,0.15);
+  --shadow-card:0 4px 20px rgba(0,0,0,0.06),0 8px 40px rgba(0,0,0,0.04);
+  --radius:20px;
+  --radius-sm:12px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--tx);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* ── ANIMATIONS ── */
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes float-delayed{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes pulse-glow{0%,100%{opacity:0.6}50%{opacity:1}}
+@keyframes slide-up{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slide-in-left{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slide-in-right{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+@keyframes rotate-slow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes pls{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+@keyframes gradient-shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.animate-on-scroll{opacity:0;transform:translateY(30px);transition:all 0.7s cubic-bezier(.4,0,.2,1)}
+.animate-on-scroll.visible{opacity:1;transform:translateY(0)}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(255,255,255,0.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(46,125,50,0.08);height:72px;display:flex;align-items:center;padding:0 48px;transition:all 0.3s}
+nav.scrolled{box-shadow:0 4px 30px rgba(0,0,0,0.06)}
+.nav-inner{max-width:1280px;width:100%;margin:0 auto;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--tx);font-weight:800;font-size:20px;letter-spacing:-0.5px}
+.logo-box{width:36px;height:36px;background:var(--gradient);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(46,125,50,0.25)}
+.logo-box svg{width:18px;height:18px}
+.nav-links{display:flex;gap:32px;list-style:none;align-items:center}
+.nav-links a{text-decoration:none;color:var(--mu);font-size:14px;font-weight:500;transition:all 0.3s;position:relative;padding:4px 0}
+.nav-links a::after{content:'';position:absolute;bottom:-2px;left:0;width:0;height:2px;background:var(--gradient);transition:width 0.3s;border-radius:2px}
+.nav-links a:hover{color:var(--p)}.nav-links a:hover::after{width:100%}
+.nav-links a.active{color:var(--p)}.nav-links a.active::after{width:100%}
+.nav-acts{display:flex;gap:12px;align-items:center}
+.btn-ghost{background:none;border:none;padding:8px 20px;border-radius:10px;font-size:14px;font-weight:600;color:var(--tx);cursor:pointer;text-decoration:none;transition:all 0.3s;font-family:inherit}
+.btn-ghost:hover{background:rgba(46,125,50,0.06);color:var(--p)}
+.btn-p{background:var(--gradient);color:#fff;border:none;padding:10px 24px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;transition:all 0.3s;font-family:inherit;box-shadow:0 4px 16px rgba(46,125,50,0.25)}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(46,125,50,0.35)}
+
+/* ── HERO ── */
+.hero{min-height:100vh;padding-top:72px;background:linear-gradient(155deg,#F5F7FA 0%,#E8F5E9 30%,#DCEDC8 60%,#C8E6C9 100%);display:flex;align-items:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-30%;right:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(76,175,80,0.08),transparent 70%);border-radius:50%}
+.hero::after{content:'';position:absolute;bottom:-20%;left:-5%;width:400px;height:400px;background:radial-gradient(circle,rgba(46,125,50,0.05),transparent 70%);border-radius:50%}
+.hero-inner{max-width:1280px;margin:0 auto;padding:80px 48px;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;width:100%;position:relative;z-index:1}
+.hero-content{animation:slide-up 0.8s ease forwards}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(46,125,50,0.10);border:1px solid rgba(46,125,50,0.15);border-radius:100px;padding:6px 18px 6px 8px;font-size:12px;font-weight:700;color:var(--p);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:24px}
+.badge-dot{width:8px;height:8px;background:var(--s);border-radius:50%;animation:pls 2s infinite}
+h1{font-size:58px;font-weight:900;line-height:1.05;letter-spacing:-2.5px;margin-bottom:20px;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200% 200%;animation:gradient-shift 6s ease infinite}
+h1 em{font-style:normal;background:linear-gradient(135deg,#2E7D32,#4CAF50);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:18px;line-height:1.8;color:var(--mu);margin-bottom:36px;max-width:480px}
+.hero-acts{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:52px}
+.btn-pl{background:var(--gradient);color:#fff;border:none;padding:16px 32px;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(46,125,50,0.30);transition:all 0.3s;font-family:inherit}
+.btn-pl:hover{transform:translateY(-3px);box-shadow:0 12px 48px rgba(46,125,50,0.40)}
+.btn-ol{background:#fff;color:var(--tx);border:2px solid var(--bd);padding:15px 32px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all 0.3s;font-family:inherit}
+.btn-ol:hover{border-color:var(--p);color:var(--p);transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.06)}
+.hero-stats{display:flex;gap:48px;padding-top:8px;border-top:1px solid rgba(46,125,50,0.08)}
+.hstat .hstat-val{font-size:32px;font-weight:900;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hstat-lbl{font-size:12px;color:var(--mu);font-weight:500;margin-top:2px}
+
+/* Hero visual */
+.hero-vis{position:relative;display:flex;align-items:center;justify-content:center;animation:slide-up 0.8s ease 0.2s both}
+.hero-vis svg{width:100%;max-width:520px;height:auto;filter:drop-shadow(0 20px 60px rgba(46,125,50,0.10))}
+.hero-card{position:absolute;background:rgba(255,255,255,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:14px;padding:16px 20px;box-shadow:0 8px 40px rgba(0,0,0,0.08);border:1px solid rgba(255,255,255,0.5);min-width:170px;transition:all 0.4s}
+.hero-card:hover{transform:scale(1.03);box-shadow:0 12px 48px rgba(0,0,0,0.12)}
+.hero-card.c1{top:6%;right:-12px;animation:float 4s ease-in-out infinite}
+.hero-card.c2{bottom:10%;left:-8px;animation:float-delayed 3.5s ease-in-out infinite}
+.hero-card.c3{top:46%;right:-20px;animation:float 4.5s ease-in-out infinite}
+.ctag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--mu);margin-bottom:6px}
+.cval{font-size:22px;font-weight:700;color:var(--tx)}
+.csub{font-size:11px;color:var(--s);font-weight:600}
+.sbar-wrap{display:flex;flex-direction:column;gap:5px;margin-top:6px}
+.sbar-row{display:flex;align-items:center;gap:8px;font-size:10px}
+.sbar-lbl{width:9px;color:var(--mu);font-weight:700}
+.sbar-track{flex:1;height:4px;background:#E8ECF0;border-radius:4px;overflow:hidden}
+.sbar-fill{height:100%;border-radius:4px}
+
+/* ── STATS BAR ── */
+.stats-bar{background:var(--gradient);padding:44px 0;position:relative;overflow:hidden}
+.stats-bar::before{content:'';position:absolute;top:-50%;right:-10%;width:400px;height:400px;background:rgba(255,255,255,0.04);border-radius:50%}
+.stats-bar .si{max-width:1280px;margin:0 auto;padding:0 48px;display:grid;grid-template-columns:repeat(4,1fr);gap:24px;position:relative;z-index:1}
+.sitem{text-align:center;color:#fff;padding:8px}
+.snum{font-size:38px;font-weight:900;letter-spacing:-1px;display:block}
+.sdesc{font-size:13px;opacity:0.75;margin-top:4px;font-weight:500}
+
+/* ── SECTIONS COMMON ── */
+.si{max-width:1280px;margin:0 auto;padding:0 48px}
+section{padding:96px 0}
+.stag{display:inline-block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--p);margin-bottom:12px;background:rgba(46,125,50,0.08);padding:4px 16px;border-radius:100px}
+h2{font-size:40px;font-weight:800;letter-spacing:-1.5px;line-height:1.15;margin-bottom:12px}
+h2 .highlight{background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ssub{font-size:17px;color:var(--mu);max-width:520px;line-height:1.8;margin-bottom:48px}
+
+/* ── FEATURES ── */
+.feat-sec{background:#fff}
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.feat-card{background:var(--bg);border:1px solid var(--bd);border-radius:var(--radius);padding:32px;transition:all 0.4s cubic-bezier(.4,0,.2,1);cursor:default;position:relative;overflow:hidden}
+.feat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--gradient);transform:scaleX(0);transform-origin:left;transition:transform 0.4s}
+.feat-card:hover{transform:translateY(-8px);border-color:rgba(46,125,50,0.15);box-shadow:var(--shadow-glow)}
+.feat-card:hover::before{transform:scaleX(1)}
+.feat-card .ficon{width:52px;height:52px;background:rgba(46,125,50,0.08);border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;transition:all 0.3s}
+.feat-card:hover .ficon{background:var(--gradient);color:#fff}
+.feat-card .ficon svg{stroke:var(--p);transition:stroke 0.3s}
+.feat-card:hover .ficon svg{stroke:#fff}
+.ftitle{font-size:17px;font-weight:700;margin-bottom:8px}
+.fdesc{font-size:14px;line-height:1.7;color:var(--mu)}
+
+/* ── HOW IT WORKS ── */
+.how-sec{background:var(--gradient-light)}
+.how-sec .stag{background:rgba(46,125,50,0.15)}
+.how-sec h2,.how-sec .ssub{color:var(--tx)}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;position:relative}
+.steps::before{content:'';position:absolute;top:32px;left:calc(16.66% + 20px);right:calc(16.66% + 20px);height:3px;background:var(--gradient);z-index:0;border-radius:3px}
+.step{text-align:center;position:relative;z-index:1;padding:0 8px}
+.step-n{width:64px;height:64px;background:var(--gradient);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;margin:0 auto 20px;border:4px solid #fff;box-shadow:0 0 0 4px rgba(46,125,50,0.15)}
+.step-t{font-size:18px;font-weight:700;margin-bottom:8px}
+.step-d{font-size:14px;color:var(--mu);line-height:1.7}
+
+/* ── IOT SECTION ── */
+.iot-sec{background:var(--gradient);color:#fff;position:relative;overflow:hidden}
+.iot-sec::before{content:'';position:absolute;top:-40%;right:-8%;width:500px;height:500px;background:radial-gradient(circle,rgba(255,255,255,0.06),transparent 70%);border-radius:50%}
+.iot-sec .stag{background:rgba(255,255,255,0.12);color:#A5D6A7}
+.iot-inner{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;position:relative;z-index:1}
+.ititle{font-size:38px;font-weight:800;letter-spacing:-1.5px;margin-bottom:16px;line-height:1.15;color:#fff}
+.isub{font-size:16px;opacity:0.8;line-height:1.8;margin-bottom:32px}
+.ilist{list-style:none;display:flex;flex-direction:column;gap:14px}
+.iitem{display:flex;align-items:center;gap:14px;font-size:14px;opacity:0.9}
+.idot{width:8px;height:8px;background:#81C784;border-radius:50%;flex-shrink:0}
+.idevice{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:20px;padding:30px;backdrop-filter:blur(4px)}
+.idev-head{display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.dname{font-size:14px;font-weight:700;color:#fff}
+.dsub{font-size:10px;opacity:0.4;margin-top:2px}
+.dstatus{display:flex;align-items:center;gap:6px;font-size:11px;color:#81C784;font-weight:600}
+.dsdot{width:7px;height:7px;background:#81C784;border-radius:50%;animation:pls 2s infinite}
+.irow{display:flex;align-items:center;gap:12px;padding:4px 0}
+.rlabel{font-size:11px;color:rgba(255,255,255,0.4);font-weight:500;width:90px;flex-shrink:0}
+.rbar{flex:1;height:4px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden}
+.rbfill{height:100%;border-radius:4px;background:#81C784;transition:width 0.6s}
+.rval{font-size:13px;font-weight:700;color:#fff;width:70px;text-align:right;flex-shrink:0}
+
+/* ── TESTIMONIALS ── */
+.test-sec{background:#fff}
+.test-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.tcard{background:var(--bg);border:1px solid var(--bd);border-radius:var(--radius);padding:32px;transition:all 0.3s}
+.tcard:hover{transform:translateY(-4px);box-shadow:var(--shadow-card)}
+.stars{color:#F9A825;font-size:14px;margin-bottom:14px;letter-spacing:2px}
+.ttext{font-size:14px;line-height:1.8;color:var(--tx);margin-bottom:18px;font-style:italic}
+.tauthor{display:flex;align-items:center;gap:12px}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--gradient-light);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--p);flex-shrink:0}
+.aname{font-size:14px;font-weight:600}
+.ainfo{font-size:11px;color:var(--mu);margin-top:1px}
+
+/* ── CTA ── */
+.cta-sec{background:var(--gradient-light);text-align:center;padding:80px 0}
+.cta-box{background:#fff;border:1px solid var(--bd);border-radius:24px;padding:64px 48px;max-width:640px;margin:0 auto;box-shadow:var(--shadow-glow)}
+.cta-icon{width:64px;height:64px;background:rgba(46,125,50,0.08);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+.cta-t{font-size:36px;font-weight:800;letter-spacing:-1px;margin-bottom:12px}
+.cta-s{font-size:16px;color:var(--mu);margin-bottom:32px;line-height:1.7}
+
+/* ── FOOTER ── */
+footer{background:#1C2B1E;color:rgba(255,255,255,0.5);padding:56px 0 32px;font-size:14px}
+.foot-grid{max-width:1280px;margin:0 auto;padding:0 48px 48px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:32px}
+.fbrand{display:flex;align-items:center;gap:10px;color:#fff;font-weight:800;font-size:18px;margin-bottom:12px}
+.fbrand .logo-box{width:32px;height:32px}
+.fbrand .logo-box svg{width:14px;height:14px}
+.fcol h4{color:#fff;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:16px}
+.fcol ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+.fcol ul a{color:rgba(255,255,255,0.4);text-decoration:none;transition:color 0.3s;font-size:13px}
+.fcol ul a:hover{color:#fff}
+.foot-bot{max-width:1280px;margin:0 auto;padding:0 48px;display:flex;justify-content:space-between;align-items:center;font-size:12px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1024px){
+  .hero-inner{grid-template-columns:1fr;gap:48px;padding:60px 32px}
+  h1{font-size:44px}
+  .feat-grid{grid-template-columns:1fr 1fr}
+  .iot-inner{grid-template-columns:1fr;gap:40px}
+  .test-grid{grid-template-columns:1fr 1fr}
+  .foot-grid{grid-template-columns:1fr 1fr;gap:32px}
+}
+@media(max-width:768px){
+  nav{padding:0 20px;height:64px}
+  .nav-links{display:none}
+  .hero-inner{padding:40px 20px}
+  h1{font-size:34px}
+  .hero-stats{flex-wrap:wrap;gap:24px}
+  .feat-grid{grid-template-columns:1fr}
+  .test-grid{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr;gap:32px}
+  .steps::before{display:none}
+  .stats-bar .si{grid-template-columns:1fr 1fr;padding:0 20px}
+  .foot-grid{grid-template-columns:1fr;gap:24px}
+  .foot-bot{flex-direction:column;gap:8px;text-align:center}
+  .cta-box{padding:40px 24px}
+  .hero-card{display:none}
+  .stat-row{grid-template-columns:1fr 1fr}
+  .main-grid{grid-template-columns:1fr}
+  .content{padding:16px}
+  .sidebar{width:60px}
+  .sidebar .sb-label,.sidebar .sb-item span,.sidebar .sb-footer .farm-name,.sidebar .sb-footer .farm-sub{display:none}
+  .sidebar .sb-item{padding:12px;justify-content:center}
+  .sidebar .sb-item svg{margin:0}
+}
+@media(max-width:480px){
+  .stats-bar .si{grid-template-columns:1fr}
+  .hero-acts{flex-direction:column;align-items:stretch}
+  .btn-pl,.btn-ol{justify-content:center}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <div class="logo-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
+          <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>
+          <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+        </svg>
+      </div>
+      AgroSense
+    </a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#howitworks">How it Works</a></li>
+      <li><a href="#iot">IoT Setup</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+    </ul>
+    <div class="nav-acts">
+      <a href="/login" class="btn-ghost">Sign In</a>
+      <a href="/register" class="btn-p">Get Started Free</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-inner">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <div class="badge-dot"></div>
+        AI-Powered Farm Intelligence
+      </div>
+      <h1>Grow <em>smarter,</em><br>harvest better</h1>
+      <p class="hero-sub">AgroSense connects your soil sensors, crops, and market data into one intelligent platform — giving you real-time insights, AI disease detection, and market-beating decisions every day.</p>
+      <div class="hero-acts">
+        <a href="/login" class="btn-pl">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          Open Dashboard
+        </a>
+        <a href="#howitworks" class="btn-ol">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polygon points="10 8 16 12 10 16 10 8"/>
+          </svg>
+          See How It Works
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div class="hstat"><span class="hstat-val">500+</span><span class="hstat-lbl">Farms Active</span></div>
+        <div class="hstat"><span class="hstat-val">96%</span><span class="hstat-lbl">Disease Accuracy</span></div>
+        <div class="hstat"><span class="hstat-val">18%</span><span class="hstat-lbl">Avg. Yield Gain</span></div>
+      </div>
+    </div>
+
+    <div class="hero-vis">
+      <svg viewBox="0 0 500 380" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#DCEDC8"/><stop offset="100%" stop-color="#AED581"/></linearGradient>
+        </defs>
+        <rect width="500" height="240" fill="#E8F5E9" rx="16"/>
+        <ellipse cx="100" cy="55" rx="45" ry="18" fill="#fff" opacity=".7"/>
+        <ellipse cx="128" cy="46" rx="34" ry="16" fill="#fff" opacity=".7"/>
+        <ellipse cx="75" cy="50" rx="28" ry="14" fill="#fff" opacity=".7"/>
+        <ellipse cx="370" cy="42" rx="38" ry="15" fill="#fff" opacity=".7"/>
+        <ellipse cx="398" cy="35" rx="28" ry="14" fill="#fff" opacity=".7"/>
+        <circle cx="448" cy="52" r="24" fill="#FFF9C4" opacity=".8"/>
+        <circle cx="448" cy="52" r="17" fill="#FDD835" opacity=".7"/>
+        <path d="M0 175 Q100 135 220 158 Q330 128 430 150 L500 152 L500 195 L0 195Z" fill="#A5D6A7" opacity=".5"/>
+        <path d="M0 195 Q90 168 200 182 Q310 158 410 175 L500 172 L500 215 L0 215Z" fill="#81C784" opacity=".55"/>
+        <rect x="0" y="215" width="500" height="110" fill="#388E3C"/>
+        <g fill="#2E7D32">
+          <path d="M15 222 Q20 204 25 222Z"/><path d="M45 222 Q50 202 55 222Z"/><path d="M75 222 Q80 205 85 222Z"/>
+          <path d="M105 222 Q110 203 115 222Z"/><path d="M135 222 Q140 206 145 222Z"/><path d="M165 222 Q170 204 175 222Z"/>
+          <path d="M195 222 Q200 205 205 222Z"/><path d="M225 222 Q230 203 235 222Z"/><path d="M255 222 Q260 206 265 222Z"/>
+          <path d="M285 222 Q290 204 295 222Z"/><path d="M315 222 Q320 205 325 222Z"/><path d="M345 222 Q350 203 355 222Z"/>
+          <path d="M375 222 Q380 206 385 222Z"/><path d="M405 222 Q410 204 415 222Z"/><path d="M435 222 Q440 205 445 222Z"/><path d="M465 222 Q470 203 475 222Z"/>
+          <path d="M30 252 Q35 234 40 252Z"/><path d="M60 252 Q65 232 70 252Z"/><path d="M90 252 Q95 235 100 252Z"/>
+          <path d="M120 252 Q125 232 130 252Z"/><path d="M150 252 Q155 234 160 252Z"/><path d="M180 252 Q185 232 190 252Z"/>
+          <path d="M210 252 Q215 235 220 252Z"/><path d="M240 252 Q245 233 250 252Z"/><path d="M270 252 Q275 236 280 252Z"/>
+          <path d="M300 252 Q305 233 310 252Z"/><path d="M330 252 Q335 234 340 252Z"/><path d="M360 252 Q365 232 370 252Z"/>
+          <path d="M390 252 Q395 235 400 252Z"/><path d="M420 252 Q425 233 430 252Z"/><path d="M450 252 Q455 235 460 252Z"/>
+        </g>
+        <rect x="0" y="237" width="500" height="5" fill="#1B5E20" opacity=".25"/>
+        <rect x="0" y="267" width="500" height="5" fill="#1B5E20" opacity=".25"/>
+        <g transform="translate(90,230)"><rect x="-13" y="-13" width="26" height="26" rx="7" fill="#1B5E20"/><circle cx="0" cy="0" r="5" fill="#4CAF50"/><line x1="0" y1="-13" x2="0" y2="-28" stroke="#4CAF50" stroke-width="1.5"/><circle cx="0" cy="-30" r="3" fill="#4CAF50"/></g>
+        <g transform="translate(255,242)"><rect x="-13" y="-13" width="26" height="26" rx="7" fill="#1B5E20"/><circle cx="0" cy="0" r="5" fill="#4CAF50"/><line x1="0" y1="-13" x2="0" y2="-28" stroke="#4CAF50" stroke-width="1.5"/><circle cx="0" cy="-30" r="3" fill="#4CAF50"/></g>
+        <g transform="translate(410,234)"><rect x="-13" y="-13" width="26" height="26" rx="7" fill="#1B5E20"/><circle cx="0" cy="0" r="5" fill="#4CAF50"/><line x1="0" y1="-13" x2="0" y2="-28" stroke="#4CAF50" stroke-width="1.5"/><circle cx="0" cy="-30" r="3" fill="#4CAF50"/></g>
+        <g stroke="#4CAF50" stroke-width="1.2" stroke-dasharray="5 3" opacity=".5">
+          <line x1="90" y1="200" x2="250" y2="88"/><line x1="255" y1="212" x2="250" y2="88"/><line x1="410" y1="203" x2="250" y2="88"/>
+        </g>
+        <g transform="translate(250,80)">
+          <circle cx="0" cy="0" r="20" fill="#2E7D32" opacity=".9"/>
+          <path d="M-9 2 Q0 -7 9 2" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path d="M-14 7 Q0 -13 14 7" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round" opacity=".6"/>
+          <circle cx="0" cy="7" r="2.5" fill="#fff"/>
+        </g>
+        <rect x="0" y="310" width="500" height="70" fill="#3E2723" rx="0 0 16 16"/>
+        <g stroke="#6D4C41" stroke-width="1" opacity=".5">
+          <line x1="90" y1="310" x2="82" y2="348"/><line x1="90" y1="310" x2="100" y2="345"/>
+          <line x1="255" y1="310" x2="244" y2="350"/><line x1="255" y1="310" x2="267" y2="346"/>
+          <line x1="410" y1="310" x2="400" y2="348"/><line x1="410" y1="310" x2="421" y2="345"/>
+        </g>
+      </svg>
+
+      <div class="hero-card c1">
+        <div class="ctag">Live NPK Readings</div>
+        <div class="sbar-wrap">
+          <div class="sbar-row"><span class="sbar-lbl">N</span><div class="sbar-track"><div class="sbar-fill" style="width:65%;background:#4CAF50"></div></div><span style="font-size:10px;font-weight:700;color:#2E7D32;width:24px">45</span></div>
+          <div class="sbar-row"><span class="sbar-lbl">P</span><div class="sbar-track"><div class="sbar-fill" style="width:34%;background:#F9A825"></div></div><span style="font-size:10px;font-weight:700;color:#F9A825;width:24px">28</span></div>
+          <div class="sbar-row"><span class="sbar-lbl">K</span><div class="sbar-track"><div class="sbar-fill" style="width:78%;background:#2E7D32"></div></div><span style="font-size:10px;font-weight:700;color:#2E7D32;width:24px">95</span></div>
+        </div>
+      </div>
+      <div class="hero-card c2">
+        <div class="ctag">Soil Health Score</div>
+        <div class="cval" style="color:#2E7D32">87<span style="font-size:13px;font-weight:500;color:#747970"> /100</span></div>
+        <div class="csub">▲ +3 vs last week</div>
+      </div>
+      <div class="hero-card c3" style="min-width:148px">
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px"><div style="width:7px;height:7px;background:#F9A825;border-radius:50%"></div><span style="font-size:9px;font-weight:700;color:#F9A825">LOW PHOSPHORUS</span></div>
+        <div style="font-size:12px;color:#1C2B1E;font-weight:500;line-height:1.5">Apply DAP fertilizer<br>within 5 days</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="si">
+    <div class="sitem"><span class="snum">500+</span><span class="sdesc">Farms Using AgroSense</span></div>
+    <div class="sitem"><span class="snum">96%</span><span class="sdesc">Disease Detection Accuracy</span></div>
+    <div class="sitem"><span class="snum">2.4M</span><span class="sdesc">Sensor Readings Per Day</span></div>
+    <div class="sitem"><span class="snum">18%</span><span class="sdesc">Average Yield Increase</span></div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="feat-sec" id="features">
+  <div class="si">
+    <div class="stag">What AgroSense Does</div>
+    <h2>Everything your farm needs,<br><span class="highlight">in one place</span></h2>
+    <p class="ssub">From soil sensors to satellite weather, AgroSense brings together every signal that matters for a complete picture of your farm's health.</p>
+    <div class="feat-grid">
+      <div class="feat-card animate-on-scroll">
+        <div class="ficon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
+        <div class="ftitle">Plant Disease Detection</div>
+        <div class="fdesc">Upload a photo and our AI identifies diseases, nutrient deficiencies, and pest damage with 96% accuracy — with exact treatment steps.</div>
+      </div>
+      <div class="feat-card animate-on-scroll">
+        <div class="ficon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20" stroke-width="3"/></svg></div>
+        <div class="ftitle">Live IoT Sensor Data</div>
+        <div class="fdesc">ESP32 nodes transmit NPK, TDS, pH, moisture, and temperature via WiFi/5G. Watch your soil's vital signs update in real time.</div>
+      </div>
+      <div class="feat-card animate-on-scroll">
+        <div class="ficon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg></div>
+        <div class="ftitle">Hyperlocal Weather</div>
+        <div class="fdesc">Field-level forecasts, rain probability, and frost alerts — integrated with your planting calendar so you sow and harvest at the right time.</div>
+      </div>
+      <div class="feat-card animate-on-scroll">
+        <div class="ficon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+        <div class="ftitle">AI Crop Recommendations</div>
+        <div class="fdesc">Tell us your soil data, season, and goals. We'll recommend the best crops for your exact conditions with yield and ROI projections.</div>
+      </div>
+      <div class="feat-card animate-on-scroll">
+        <div class="ficon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+        <div class="ftitle">Live Mandi Prices</div>
+        <div class="fdesc">Track real-time prices for 50+ crops across mandis. Know exactly when and where to sell to maximise your earnings.</div>
+      </div>
+      <div class="feat-card animate-on-scroll">
+        <div class="ficon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="3"/></svg></div>
+        <div class="ftitle">Smart Alerts</div>
+        <div class="fdesc">Instant notifications when sensors flag anomalies — low nutrients, high TDS, or dangerous temperatures — before damage is done.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-sec" id="howitworks">
+  <div class="si">
+    <div class="stag">Getting Started</div>
+    <h2>From sensors to insights <span class="highlight">in minutes</span></h2>
+    <p class="ssub">Setting up AgroSense takes under 30 minutes. No technical background needed.</p>
+    <div class="steps">
+      <div class="step animate-on-scroll">
+        <div class="step-n">1</div>
+        <div class="step-t">Plant your sensors</div>
+        <div class="step-d">Plug ESP32 nodes into your soil. They auto-connect to WiFi and immediately start streaming NPK, TDS, pH, temperature, and humidity data to your dashboard.</div>
+      </div>
+      <div class="step animate-on-scroll">
+        <div class="step-n">2</div>
+        <div class="step-t">Tell us about your farm</div>
+        <div class="step-d">Enter your location, farm size, and current crops. We pull in weather data and calibrate all recommendations to your specific region, soil type, and growing season.</div>
+      </div>
+      <div class="step animate-on-scroll">
+        <div class="step-n">3</div>
+        <div class="step-t">Let AgroSense work</div>
+        <div class="step-d">Your dashboard fills with live data. Our AI monitors everything 24/7 and sends you alerts, crop advice, and market signals — while you focus on farming.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- IOT SECTION -->
+<section class="iot-sec" id="iot">
+  <div class="si">
+    <div class="iot-inner">
+      <div>
+        <div class="stag">IoT Integration</div>
+        <div class="ititle">Your ESP32 speaks.<br>We listen — 24/7.</div>
+        <p class="isub">AgroSense integrates with ESP32 microcontrollers over any WiFi or 5G network. Sensor readings arrive at your dashboard within 2 seconds of measurement.</p>
+        <ul class="ilist">
+          <li class="iitem"><div class="idot"></div>NPK (Nitrogen, Phosphorus, Potassium) soil sensors</li>
+          <li class="iitem"><div class="idot"></div>TDS (Total Dissolved Solids) for water quality</li>
+          <li class="iitem"><div class="idot"></div>Soil pH and electrical conductivity (EC)</li>
+          <li class="iitem"><div class="idot"></div>Soil moisture and root-zone temperature</li>
+          <li class="iitem"><div class="idot"></div>Ambient temperature and relative humidity</li>
+          <li class="iitem"><div class="idot"></div>Updates every 30 seconds — offline buffering built in</li>
+        </ul>
+      </div>
+      <div class="idevice">
+        <div class="idev-head">
+          <div><div class="dname">ESP32 Node #1 — Field A</div><div class="dsub">Last update: 8 seconds ago</div></div>
+          <div class="dstatus"><div class="dsdot"></div>Live</div>
+        </div>
+        <div class="irow"><span class="rlabel">Nitrogen (N)</span><div class="rbar"><div class="rbfill" style="width:65%"></div></div><span class="rval">45 ppm</span></div>
+        <div class="irow"><span class="rlabel">Phosphorus (P)</span><div class="rbar"><div class="rbfill" style="width:35%;background:#F9A825"></div></div><span class="rval">28 ppm</span></div>
+        <div class="irow"><span class="rlabel">Potassium (K)</span><div class="rbar"><div class="rbfill" style="width:79%"></div></div><span class="rval">95 ppm</span></div>
+        <div class="irow"><span class="rlabel">TDS</span><div class="rbar"><div class="rbfill" style="width:72%"></div></div><span class="rval">1150 ppm</span></div>
+        <div class="irow"><span class="rlabel">Soil pH</span><div class="rbar"><div class="rbfill" style="width:68%"></div></div><span class="rval">6.8</span></div>
+        <div class="irow"><span class="rlabel">Moisture</span><div class="rbar"><div class="rbfill" style="width:62%"></div></div><span class="rval">62%</span></div>
+        <div style="border-top:1px solid rgba(255,255,255,.06);padding-top:14px;display:flex;justify-content:space-between">
+          <span style="font-size:11px;opacity:0.4">WiFi Signal: Strong (−58 dBm)</span>
+          <span style="font-size:11px;color:#81C784;font-weight:600">All sensors OK ✓</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="test-sec">
+  <div class="si">
+    <div class="stag">Farmer Stories</div>
+    <h2>Trusted by farmers <span class="highlight">across India</span></h2>
+    <p class="ssub">Real results from real farms.</p>
+    <div class="test-grid">
+      <div class="tcard animate-on-scroll">
+        <div class="stars">★★★★★</div>
+        <p class="ttext">"The NPK sensor flagged a potassium deficiency in my wheat before any yellowing. I applied fertilizer in time and saved nearly 40% of that crop. AgroSense paid for itself in one season."</p>
+        <div class="tauthor"><div class="avatar">RK</div><div><div class="aname">Rajesh Kumar</div><div class="ainfo">Wheat farmer, Punjab · 45 acres</div></div></div>
+      </div>
+      <div class="tcard animate-on-scroll">
+        <div class="stars">★★★★★</div>
+        <p class="ttext">"I photographed my tomato plant and AgroSense diagnosed early blight within 30 seconds — with the exact spray name, dosage, and where to buy it in my district."</p>
+        <div class="tauthor"><div class="avatar">PS</div><div><div class="aname">Priya Singh</div><div class="ainfo">Vegetable farmer, Haryana · 12 acres</div></div></div>
+      </div>
+      <div class="tcard animate-on-scroll">
+        <div class="stars">★★★★☆</div>
+        <p class="ttext">"The market price tracker is what I use every morning. I held my rice harvest 3 extra weeks after seeing the trend, and earned ₹85,000 more than if I'd sold on day one."</p>
+        <div class="tauthor"><div class="avatar">MA</div><div><div class="aname">Mohammed Ashraf</div><div class="ainfo">Rice farmer, Andhra Pradesh · 28 acres</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-sec">
+  <div class="si">
+    <div class="cta-box">
+      <div class="cta-icon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
+      <h2 class="cta-t">Ready to grow smarter?</h2>
+      <p class="cta-s">Join 500+ farms already using AgroSense to increase yields and reduce waste. Free for the first 30 days — no credit card required.</p>
+      <a href="/login" class="btn-pl" style="display:inline-flex">Open your dashboard</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-grid">
+    <div>
+      <div class="fbrand">
+        <div class="logo-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
+            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>
+            <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+          </svg>
+        </div>
+        AgroSense
+      </div>
+      <p style="max-width:280px;line-height:1.8;font-size:13px">Smart farming intelligence for Indian farmers. IoT sensors, AI disease detection, and live market prices in one platform.</p>
+    </div>
+    <div class="fcol"><h4>Platform</h4><ul><li><a href="/login">Dashboard</a></li><li><a href="/analytics">Plant Analysis</a></li><li><a href="/recommendation">Recommendations</a></li><li><a href="/architecture">Market Prices</a></li></ul></div>
+    <div class="fcol"><h4>Resources</h4><ul><li><a href="#">ESP32 Setup Guide</a></li><li><a href="#">Crop Library</a></li><li><a href="#">API Docs</a></li><li><a href="#">Weather API</a></li></ul></div>
+    <div class="fcol"><h4>Company</h4><ul><li><a href="#">About Us</a></li><li><a href="#">Blog</a></li><li><a href="#">Contact</a></li><li><a href="#">Privacy Policy</a></li></ul></div>
+  </div>
+  <div class="foot-bot">
+    <span>© 2026 AgroSense Technologies Pvt. Ltd.</span>
+    <span>Made for Indian farmers 🌾</span>
+  </div>
+</footer>
+
+<script>
+// ==========================================================
+// LOGIN CHECK - Redirect if already logged in
+// ==========================================================
+
+const user = localStorage.getItem("user");
+const farm = localStorage.getItem("farm");
+
+if (user && farm) {
+    window.location.href = "/dashboard";
+}
+
+// ==========================================================
+// SCROLL REVEAL
+// ==========================================================
+
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+        }
+    });
+}, {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+});
+
+document.querySelectorAll('.animate-on-scroll').forEach(el => {
+    observer.observe(el);
+});
+
+// ==========================================================
+// NAVBAR SCROLL EFFECT
+// ==========================================================
+
+window.addEventListener('scroll', () => {
+    const navbar = document.getElementById('navbar');
+    if (window.scrollY > 50) {
+        navbar.classList.add('scrolled');
+    } else {
+        navbar.classList.remove('scrolled');
+    }
+});
+
+// ==========================================================
+// SMOOTH SCROLL
+// ==========================================================
+
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
+
+// ==========================================================
+// ACTIVE NAV LINK
+// ==========================================================
+
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-links a');
+
+window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(section => {
+        const sectionTop = section.offsetTop - 100;
+        if (window.scrollY >= sectionTop) {
+            current = section.getAttribute('id');
+        }
+    });
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${current}`) {
+            link.classList.add('active');
+        }
+    });
+});
+
+console.log('🌾 AgroSense - Smart Farming Intelligence');
+console.log('🚀 Ready to grow smarter!');
+</script>
+
+</body>
+</html>

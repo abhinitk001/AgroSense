@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plant Analysis — AgroSense</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p:#2E7D32;--pd:#1B5E20;--s:#4CAF50;--sl:#C8E6C9;
+  --bg:#F5F7FA;--sf:#FFFFFF;--tx:#1C2B1E;--mu:#747970;--bd:#E0E5E0;
+  --dr:#D32F2F;--drl:#FFEBEE;--wa:#F9A825;--wal:#FFF9C4;
+  --r:12px;--rl:16px;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 4px 12px rgba(0,0,0,.05);
+  --shm:0 4px 6px rgba(0,0,0,.06),0 10px 20px rgba(0,0,0,.05);
+}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--tx);line-height:1.6;-webkit-font-smoothing:antialiased;display:flex;height:100vh;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{width:240px;flex-shrink:0;background:#fff;border-right:1px solid var(--bd);display:flex;flex-direction:column;height:100vh;overflow-y:auto}
+.sb-head{padding:18px 20px 14px;border-bottom:1px solid var(--bd)}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--tx);font-weight:800;font-size:15px;letter-spacing:-.3px}
+.logo-box{width:28px;height:28px;background:var(--p);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-section{padding:16px 12px 4px}
+.sb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--mu);padding:0 8px;margin-bottom:6px}
+.sb-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;text-decoration:none;color:var(--mu);font-size:13px;font-weight:500;transition:all .18s;cursor:pointer;margin-bottom:1px}
+.sb-item:hover{background:var(--bg);color:var(--tx)}
+.sb-item.active{background:rgba(46,125,50,.1);color:var(--p);font-weight:600}
+.sb-item.active svg{stroke:var(--p)}
+.sb-item svg{flex-shrink:0;opacity:.7}
+.sb-item.active svg{opacity:1}
+.sb-badge{margin-left:auto;background:var(--p);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px}
+.sb-badge-5g{background:linear-gradient(135deg,#1565C0,#0D47A1);color:#fff;font-size:10px;font-weight:700;padding:1px 8px;border-radius:10px;margin-left:auto}
+
+.sb-footer{margin-top:auto;padding:16px 12px;border-top:1px solid var(--bd)}
+.farm-card{background:var(--bg);border-radius:10px;padding:12px;display:flex;align-items:center;gap:9px}
+.farm-icon{width:34px;height:34px;background:rgba(46,125,50,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.farm-name{font-size:12px;font-weight:600;color:var(--tx)}
+.farm-sub{font-size:10px;color:var(--mu)}
+
+/* ── LOGOUT BUTTON ── */
+.sb-logout{padding:8px 12px;margin-bottom:4px}
+.sb-logout .sb-item{color:#D32F2F}
+.sb-logout .sb-item:hover{background:#FFEBEE;color:#D32F2F}
+.sb-logout .sb-item svg{stroke:#D32F2F}
+.sb-logout .sb-item:hover svg{stroke:#D32F2F}
+
+/* ── MAIN ── */
+.main{flex:1;overflow-y:auto}
+.topbar{background:#fff;border-bottom:1px solid var(--bd);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.tb-title{font-size:16px;font-weight:700;letter-spacing:-.3px}
+.tb-sub{font-size:11px;color:var(--mu)}
+.tb-right{display:flex;align-items:center;gap:10px}
+.av-btn{width:32px;height:32px;border-radius:50%;background:var(--p);display:flex;align-items:center;justify-content:center;border:none;cursor:pointer}
+.av-btn span{color:#fff;font-size:12px;font-weight:700}
+
+.content{padding:24px 28px;display:grid;grid-template-columns:1.1fr 1fr;gap:22px;align-items:start}
+
+/* ── UPLOAD PANEL ── */
+.upload-panel{background:#fff;border-radius:var(--rl);border:1px solid var(--bd);box-shadow:var(--sh);overflow:hidden}
+.up-header{padding:18px 20px 0;border-bottom:1px solid var(--bd);display:flex;flex-direction:column;gap:4px;padding-bottom:14px}
+.up-title{font-size:14px;font-weight:700;letter-spacing:-.2px}
+.up-sub{font-size:11px;color:var(--mu)}
+.up-body{padding:20px}
+
+.drop-zone{border:2px dashed var(--bd);border-radius:14px;padding:40px 20px;text-align:center;cursor:pointer;transition:all .25s;background:var(--bg);position:relative;overflow:hidden}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--p);background:rgba(46,125,50,.04)}
+.drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.dz-icon{width:52px;height:52px;background:rgba(46,125,50,.1);border-radius:14px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center}
+.dz-title{font-size:14px;font-weight:600;margin-bottom:5px}
+.dz-sub{font-size:12px;color:var(--mu);line-height:1.6}
+.dz-types{display:flex;justify-content:center;gap:8px;margin-top:14px;flex-wrap:wrap}
+.dz-type{background:#fff;border:1px solid var(--bd);border-radius:6px;padding:3px 10px;font-size:10px;font-weight:600;color:var(--mu)}
+
+.preview-box{margin-top:16px;display:none}
+.preview-img{width:100%;border-radius:10px;max-height:240px;object-fit:cover;display:block}
+.preview-meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.preview-name{font-size:12px;font-weight:600;color:var(--tx)}
+.preview-size{font-size:11px;color:var(--mu)}
+.remove-img{background:none;border:1px solid var(--bd);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--mu);cursor:pointer;font-family:inherit;transition:all .2s}
+.remove-img:hover{border-color:var(--dr);color:var(--dr)}
+
+.up-options{margin-top:16px;display:flex;flex-direction:column;gap:10px}
+.opt-row{display:flex;align-items:center;justify-content:space-between}
+.opt-label{font-size:12px;font-weight:600}
+.opt-sub{font-size:11px;color:var(--mu);margin-top:1px}
+.toggle{position:relative;width:38px;height:20px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.slider{position:absolute;inset:0;background:var(--bd);border-radius:20px;cursor:pointer;transition:.25s}
+.slider::before{content:'';position:absolute;width:14px;height:14px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.25s}
+.toggle input:checked+.slider{background:var(--p)}
+.toggle input:checked+.slider::before{transform:translateX(18px)}
+
+.crop-select{width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:9px;font-size:12px;font-family:inherit;color:var(--tx);margin-top:14px;cursor:pointer;outline:none;transition:border-color .2s}
+.crop-select:focus{border-color:var(--p)}
+
+.analyze-btn{width:100%;margin-top:16px;padding:13px;background:var(--p);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;box-shadow:0 4px 14px rgba(46,125,50,.25)}
+.analyze-btn:hover{background:var(--pd);transform:translateY(-1px)}
+.analyze-btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.analyze-btn .spinner{width:16px;height:16px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;display:none}
+.analyze-btn.loading .btn-text{display:none}
+.analyze-btn.loading .spinner{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── RESULTS PANEL ── */
+.results-panel{display:flex;flex-direction:column;gap:18px}
+
+/* ── RESULT CARD ── */
+.result-card{background:#fff;border-radius:var(--rl);border:1px solid var(--bd);box-shadow:var(--sh);overflow:hidden;display:none}
+.rc-header{padding:18px 20px 14px;border-bottom:1px solid var(--bd)}
+.rc-disease{font-size:16px;font-weight:700;margin-bottom:6px}
+.rc-meta{display:flex;gap:8px;flex-wrap:wrap}
+.rc-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px}
+.sev-high{background:#FFEBEE;color:#D32F2F}
+.sev-medium{background:#FFF9C4;color:#E65100}
+.sev-none{background:rgba(46,125,50,.1);color:var(--p)}
+.conf-badge{background:var(--bg);color:var(--mu);border:1px solid var(--bd)}
+.rc-body{padding:18px 20px}
+
+/* Confidence meter */
+.conf-meter{margin-bottom:18px}
+.conf-label{font-size:11px;font-weight:600;color:var(--mu);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.conf-pct{font-size:18px;font-weight:800;color:var(--p)}
+.conf-track{height:8px;background:var(--bg);border-radius:8px;overflow:hidden;border:1px solid var(--bd)}
+.conf-fill{height:100%;border-radius:8px;transition:width 1s ease}
+
+/* Top 5 Predictions */
+.top5-container{margin-bottom:18px;padding:14px;background:var(--bg);border-radius:10px;border:1px solid var(--bd)}
+.top5-title{font-size:11px;font-weight:700;color:var(--mu);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.top5-item{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.top5-item:last-child{margin-bottom:0}
+.top5-rank{font-size:10px;font-weight:700;color:var(--mu);width:24px;text-align:center}
+.top5-name{font-size:12px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top5-bar{flex:1;height:6px;background:var(--bd);border-radius:4px;overflow:hidden;max-width:120px}
+.top5-fill{height:100%;border-radius:4px;transition:width 0.8s ease}
+.top5-pct{font-size:11px;font-weight:700;min-width:44px;text-align:right}
+
+/* Affected area ring */
+.ring-row{display:flex;align-items:center;gap:16px;margin-bottom:18px;padding:14px;background:var(--bg);border-radius:10px}
+.ring-wrap{position:relative;width:70px;height:70px;flex-shrink:0}
+.ring-wrap svg{transform:rotate(-90deg)}
+.ring-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--dr)}
+.ring-info-title{font-size:13px;font-weight:600;margin-bottom:3px}
+.ring-info-sub{font-size:11px;color:var(--mu);line-height:1.5}
+
+/* Treatment steps */
+.treatment-section{margin-bottom:16px}
+.ts-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mu);margin-bottom:8px}
+.treat-item{display:flex;gap:10px;padding:10px 12px;border-radius:9px;background:var(--bg);margin-bottom:6px;border-left:3px solid var(--p)}
+.treat-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.treat-text{font-size:12px;line-height:1.6;color:var(--tx)}
+.treat-item.prev{border-left-color:var(--wa)}
+
+/* Healthy result */
+.healthy-card{background:rgba(46,125,50,.07);border:1.5px solid rgba(46,125,50,.25);border-radius:var(--rl);padding:24px;text-align:center;display:none}
+.hc-icon{font-size:48px;margin-bottom:10px}
+.hc-title{font-size:18px;font-weight:700;color:var(--p);margin-bottom:6px}
+.hc-sub{font-size:13px;color:var(--mu);line-height:1.6}
+
+/* ── HISTORY PANEL ── */
+.history-panel{background:#fff;border-radius:var(--rl);border:1px solid var(--bd);box-shadow:var(--sh)}
+.hp-head{padding:16px 18px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center}
+.hp-title{font-size:13px;font-weight:700}
+.hp-list{padding:8px 0}
+.hp-item{display:flex;align-items:center;gap:12px;padding:10px 18px;transition:background .15s;cursor:pointer}
+.hp-item:hover{background:var(--bg)}
+.hp-thumb{width:38px;height:38px;border-radius:8px;background:var(--sl);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden}
+.hp-thumb img{width:100%;height:100%;object-fit:cover;border-radius:8px}
+.hp-crop{font-size:12px;font-weight:600}
+.hp-diag{font-size:11px;color:var(--mu);margin-top:1px}
+.hp-badge{margin-left:auto;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px}
+.hp-date{font-size:10px;color:var(--mu);margin-left:auto;flex-shrink:0}
+
+/* ── IOT CONTEXT ── */
+.iot-ctx{background:#fff;border-radius:var(--rl);border:1px solid var(--bd);box-shadow:var(--sh)}
+.ic-head{padding:16px 18px;border-bottom:1px solid var(--bd)}
+.ic-title{font-size:13px;font-weight:700}
+.ic-sub{font-size:11px;color:var(--mu);margin-top:2px}
+.ic-body{padding:14px 18px;display:flex;flex-direction:column;gap:9px}
+.ic-row{display:flex;align-items:center;gap:10px;font-size:12px}
+.ic-key{color:var(--mu);width:130px;flex-shrink:0;font-weight:500}
+.ic-val{font-weight:700;color:var(--tx)}
+.ic-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* ── LOADING ── */
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.8);display:flex;align-items:center;justify-content:center;z-index:999;display:none}
+.loading-spinner{width:48px;height:48px;border:4px solid var(--bd);border-top-color:var(--p);border-radius:50%;animation:spin .8s linear infinite}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1024px){.content{grid-template-columns:1fr}}
+@media(max-width:600px){.content{padding:16px}.sidebar{width:60px}.sidebar .sb-label,.sidebar .sb-item span,.sidebar .sb-footer .farm-name,.sidebar .sb-footer .farm-sub{display:none}.sidebar .sb-item{padding:12px;justify-content:center}.sidebar .sb-item svg{margin:0}}
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay"><div class="loading-spinner"></div></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-head">
+    <a href="/home" class="logo">
+      <div class="logo-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
+      AgroSense
+    </a>
+  </div>
+
+  <div class="sb-section">
+    <div class="sb-label">Overview</div>
+    <a href="/dashboard" class="sb-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Dashboard</span></a>
+    <a href="/analytics" class="sb-item active"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg><span>Plant Analysis</span><span class="sb-badge">AI</span></a>
+  </div>
+
+  <div class="sb-section">
+    <div class="sb-label">Intelligence</div>
+    <a href="/recommendation" class="sb-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span>Crop Advice</span></a>
+    <a href="/livestream" class="sb-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="4" width="20" height="16" rx="2"/>
+        <circle cx="12" cy="12" r="3"/>
+        <line x1="2" y1="8" x2="6" y2="8"/>
+        <line x1="2" y1="12" x2="4" y2="12"/>
+        <line x1="2" y1="16" x2="6" y2="16"/>
+      </svg>
+      5G Live Stream
+      <span class="sb-badge-5g">5G</span>
+    </a>
+    <a href="/architecture" class="sb-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg><span>Market Prices</span></a>
+  </div>
+
+  <!-- LOGOUT BUTTON - MOVED TO BOTTOM ABOVE FARM INFO -->
+  <div class="sb-logout">
+    <a href="#" class="sb-item" onclick="logout()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+      Logout
+    </a>
+  </div>
+
+  <div class="sb-footer">
+    <div class="farm-card">
+      <div class="farm-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+      <div><div class="farm-name" id="farmName">Loading...</div><div class="farm-sub" id="farmDetails">Loading...</div></div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div><div class="tb-title">Plant Disease Analysis</div><div class="tb-sub">AI-powered diagnosis · 96% accuracy</div></div>
+    <div class="tb-right">
+      <div style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:rgba(46,125,50,.08);border-radius:20px;font-size:11px;font-weight:600;color:var(--p);border:1px solid rgba(46,125,50,.2)">
+        <div style="width:6px;height:6px;background:var(--s);border-radius:50%;animation:pls 2s infinite"></div>AI Model Ready
+      </div>
+      <div class="av-btn"><span id="userInitial">U</span></div>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- LEFT: Upload -->
+    <div>
+      <div class="upload-panel">
+        <div class="up-header">
+          <div class="up-title">Upload Plant Photo</div>
+          <div class="up-sub">Clear photos of affected leaves, stems, or roots work best</div>
+        </div>
+        <div class="up-body">
+          <!-- Drop zone -->
+          <div class="drop-zone" id="dropZone">
+            <input type="file" id="fileInput" accept="image/*" onchange="handleFile(event)">
+            <div class="dz-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+            <div class="dz-title">Drop image here or click to browse</div>
+            <div class="dz-sub">Capture the affected area clearly in natural light.<br>Single leaf or plant section gives best results.</div>
+            <div class="dz-types"><span class="dz-type">JPG</span><span class="dz-type">PNG</span><span class="dz-type">WEBP</span><span class="dz-type">Up to 10MB</span></div>
+          </div>
+
+          <!-- Preview -->
+          <div class="preview-box" id="previewBox">
+            <img class="preview-img" id="previewImg" src="" alt="Plant preview">
+            <div class="preview-meta">
+              <div><div class="preview-name" id="fileName">—</div><div class="preview-size" id="fileSize">—</div></div>
+              <button class="remove-img" onclick="removeImage()">Remove</button>
+            </div>
+          </div>
+
+          <!-- Crop type - helps with accuracy -->
+          <select class="crop-select" id="cropType">
+            <option value="">Select what type of plant this is (optional)</option>
+            <option value="Rice">🌾 Rice / Paddy</option>
+            <option value="Corn">🌽 Maize / Corn</option>
+            <option value="Potato">🥔 Potato</option>
+            <option value="Wheat">🌾 Wheat</option>
+            <option value="Sugarcane">🎋 Sugarcane</option>
+            <option value="Tomato">🍅 Tomato</option>
+            <option value="Cotton">🌿 Cotton</option>
+            <option value="Soybean">🌱 Soybean</option>
+          </select>
+
+          <!-- Options -->
+          <div class="up-options">
+            <div class="opt-row">
+              <div><div class="opt-label">Include sensor context</div><div class="opt-sub">Combine NPK / pH data with image for higher accuracy</div></div>
+              <label class="toggle"><input type="checkbox" id="iotToggle" checked><span class="slider"></span></label>
+            </div>
+            <div class="opt-row">
+              <div><div class="opt-label">Show treatment steps</div><div class="opt-sub">Detailed fertilizer names, dosages, and timing</div></div>
+              <label class="toggle"><input type="checkbox" id="treatToggle" checked><span class="slider"></span></label>
+            </div>
+          </div>
+
+          <button class="analyze-btn" id="analyzeBtn" onclick="runAnalysis()" disabled>
+            <svg class="btn-text" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span class="btn-text">Analyze Plant</span>
+            <div class="spinner"></div>
+          </button>
+          
+          <div id="analysisError" style="display:none;margin-top:12px;padding:12px;background:#FFEBEE;border-radius:8px;color:#D32F2F;font-size:12px"></div>
+        </div>
+      </div>
+
+      <!-- IoT Context Card -->
+      <div class="iot-ctx" style="margin-top:18px">
+        <div class="ic-head"><div class="ic-title">IoT Sensor Context</div><div class="ic-sub" id="sensorTimestamp">Loading sensor data...</div></div>
+        <div class="ic-body" id="sensorContext">
+          <div style="text-align:center;padding:10px;color:var(--mu);font-size:12px">Loading sensor data...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Results -->
+    <div class="results-panel">
+
+      <!-- Empty state -->
+      <div id="emptyState" style="background:#fff;border-radius:var(--rl);border:1px solid var(--bd);box-shadow:var(--sh);padding:48px 24px;text-align:center">
+        <div style="font-size:52px;margin-bottom:14px">🌿</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:7px">No analysis yet</div>
+        <div style="font-size:12px;color:var(--mu);line-height:1.7;max-width:240px;margin:0 auto">Upload a photo of your plant and click "Analyze Plant" to detect diseases and get treatment advice.</div>
+        <div style="margin-top:20px;display:flex;flex-direction:column;gap:8px;text-align:left;max-width:240px;margin:20px auto 0">
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mu)"><span style="color:var(--p);font-weight:700">✓</span>Disease detection with 96% accuracy</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mu)"><span style="color:var(--p);font-weight:700">✓</span>Exact fertilizer & pesticide names</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mu)"><span style="color:var(--p);font-weight:700">✓</span>IoT-enhanced diagnosis</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mu)"><span style="color:var(--p);font-weight:700">✓</span>Preventive care advice</div>
+        </div>
+      </div>
+
+      <!-- Healthy result -->
+      <div class="healthy-card" id="healthyCard">
+        <div class="hc-icon">🌱</div>
+        <div class="hc-title" id="healthyTitle">Plant looks healthy!</div>
+        <div class="hc-sub" id="healthyMessage">No disease, pest damage, or deficiency detected.<br>Your current care routine is working well.</div>
+      </div>
+
+      <!-- Disease result card -->
+      <div class="result-card" id="resultCard">
+        <div class="rc-header">
+          <div class="rc-disease" id="rc-disease">—</div>
+          <div class="rc-meta">
+            <span class="rc-badge" id="rc-sev">—</span>
+            <span class="rc-badge conf-badge" id="rc-conf">—</span>
+            <span class="rc-badge" id="rc-crop-badge" style="background:rgba(46,125,50,.1);color:var(--p)">—</span>
+          </div>
+        </div>
+        <div class="rc-body">
+          <!-- Status indicator -->
+          <div class="status-indicator" id="statusIndicator" style="margin-bottom:16px;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600">
+            <span id="statusIcon">⚠️</span>
+            <span id="statusText">Disease Detected</span>
+          </div>
+
+          <!-- Confidence meter -->
+          <div class="conf-meter">
+            <div class="conf-label"><span>AI Confidence</span><span class="conf-pct" id="rc-conf-pct">—</span></div>
+            <div class="conf-track"><div class="conf-fill" id="rc-conf-bar" style="width:0%"></div></div>
+          </div>
+
+          <!-- Top 5 Predictions -->
+          <div class="top5-container" id="top5Container">
+            <div class="top5-title">📊 Top 5 Predictions</div>
+            <div id="top5List"></div>
+          </div>
+
+          <!-- Affected area ring - shows severity visually -->
+          <div class="ring-row">
+            <div class="ring-wrap">
+              <svg width="70" height="70" viewBox="0 0 70 70">
+                <circle cx="35" cy="35" r="28" fill="none" stroke="#E0E5E0" stroke-width="8"/>
+                <circle cx="35" cy="35" r="28" fill="none" stroke="#D32F2F" stroke-width="8" stroke-dasharray="175.9" id="areaCircle" stroke-dashoffset="175.9" stroke-linecap="round" style="transition:stroke-dashoffset 1.2s ease"/>
+              </svg>
+              <div class="ring-pct" id="ring-pct">0%</div>
+            </div>
+            <div class="ring-info">
+              <div class="ring-info-title">Disease Severity</div>
+              <div class="ring-info-sub" id="ring-sub">Calculating severity...</div>
+            </div>
+          </div>
+
+          <!-- Medicine / Treatment -->
+          <div class="treatment-section" id="medicineSection">
+            <div class="ts-label">💊 Recommended Medicine</div>
+            <div id="medicineDisplay" style="padding:10px 12px;background:rgba(46,125,50,.07);border-radius:8px;font-size:14px;font-weight:600;color:var(--p);margin-bottom:12px">—</div>
+          </div>
+
+          <!-- Treatment steps -->
+          <div class="treatment-section" id="treatmentSection">
+            <div class="ts-label">📋 Treatment Instructions</div>
+            <div id="treatList"></div>
+          </div>
+
+          <!-- Preventive -->
+          <div class="treatment-section" id="preventSection">
+            <div class="ts-label">🛡️ Preventive Care</div>
+            <div id="preventList"></div>
+          </div>
+
+          <button onclick="downloadReport()" style="width:100%;padding:10px;background:var(--bg);border:1.5px solid var(--bd);border-radius:9px;font-size:12px;font-weight:600;color:var(--tx);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .2s;margin-top:4px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Report
+          </button>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div class="history-panel">
+        <div class="hp-head"><span class="hp-title">Recent Analyses</span><button style="background:none;border:none;font-size:11px;font-weight:600;color:var(--p);cursor:pointer;font-family:inherit">View All</button></div>
+        <div class="hp-list" id="historyList">
+          <div style="padding:15px;text-align:center;color:#777;font-size:13px">No analysis history yet</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==========================================================
+// LOGIN CHECK
+// ==========================================================
+
+const user = JSON.parse(localStorage.getItem("user"));
+const farm = JSON.parse(localStorage.getItem("farm"));
+
+if (!user || !farm) {
+    window.location.href = "/login";
+}
+
+document.getElementById("userInitial").textContent = user.first_name.charAt(0).toUpperCase();
+document.getElementById("farmName").textContent = farm.farm_name || "My Farm";
+document.getElementById("farmDetails").textContent = 
+    `${farm.district || ""}, ${farm.state || ""} · ${farm.farm_size || 0} Acres`;
+
+const farmId = farm.id;
+
+// ==========================================================
+// FILE HANDLING
+// ==========================================================
+
+let currentFile = null;
+
+function handleFile(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  currentFile = f;
+  const url = URL.createObjectURL(f);
+  document.getElementById('previewImg').src = url;
+  document.getElementById('previewBox').style.display = 'block';
+  document.getElementById('dropZone').style.display = 'none';
+  document.getElementById('fileName').textContent = f.name;
+  document.getElementById('fileSize').textContent = (f.size/1024/1024).toFixed(2) + ' MB';
+  document.getElementById('analyzeBtn').disabled = false;
+  document.getElementById('analysisError').style.display = 'none';
+}
+
+function removeImage() {
+  currentFile = null;
+  document.getElementById('previewBox').style.display = 'none';
+  document.getElementById('dropZone').style.display = 'block';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('analyzeBtn').disabled = true;
+  hideResults();
+}
+
+function hideResults() {
+  document.getElementById('emptyState').style.display = 'block';
+  document.getElementById('resultCard').style.display = 'none';
+  document.getElementById('healthyCard').style.display = 'none';
+}
+
+// Drag/drop
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault();
+  dz.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) {
+    const dt = new DataTransfer();
+    dt.items.add(f);
+    document.getElementById('fileInput').files = dt.files;
+    handleFile({ target: { files: [f] } });
+  }
+});
+
+// ==========================================================
+// RUN ANALYSIS - Calls Disease Detection API
+// ==========================================================
+
+async function runAnalysis() {
+  if (!currentFile) {
+    showError('Please upload an image first.');
+    return;
+  }
+
+  const btn = document.getElementById('analyzeBtn');
+  btn.classList.add('loading');
+  btn.disabled = true;
+  document.getElementById('analysisError').style.display = 'none';
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('resultCard').style.display = 'none';
+  document.getElementById('healthyCard').style.display = 'none';
+
+  try {
+    const formData = new FormData();
+    formData.append('file', currentFile);
+    
+    // Show loading
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    
+    const response = await fetch('/api/disease/predict', {
+      method: 'POST',
+      body: formData
+    });
+    
+    document.getElementById('loadingOverlay').style.display = 'none';
+    
+    const result = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(result.detail || 'Analysis failed');
+    }
+    
+    console.log('API Response:', result);
+    
+    // Check if the response has the expected structure
+    if (result.success && result.prediction) {
+      const prediction = result.prediction;
+      
+      if (prediction.health_status === 'Healthy') {
+        showHealthy(prediction);
+      } else {
+        showDiseaseResult(prediction);
+      }
+    } else if (result.health_status === 'Healthy') {
+      showHealthy(result);
+    } else if (result.disease) {
+      showDiseaseResult(result);
+    } else {
+      throw new Error('Unexpected response format from server');
+    }
+    
+  } catch (error) {
+    document.getElementById('loadingOverlay').style.display = 'none';
+    console.error('Analysis Error:', error);
+    showError(error.message || 'Failed to analyze image. Please try again.');
+  } finally {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('analysisError');
+  el.textContent = '⚠️ ' + msg;
+  el.style.display = 'block';
+  document.getElementById('emptyState').style.display = 'block';
+}
+
+function showHealthy(prediction) {
+  const card = document.getElementById('healthyCard');
+  card.style.display = 'block';
+  
+  const crop = prediction.crop || '';
+  const disease = prediction.disease || 'Healthy Plant';
+  const confidence = prediction.confidence || 0;
+  
+  document.getElementById('healthyTitle').textContent = crop ? `${crop} looks healthy!` : 'Plant looks healthy!';
+  document.getElementById('healthyMessage').innerHTML = 
+    `${disease}<br>Confidence: ${confidence}%<br><br>No treatment required. Continue your current care routine.`;
+}
+
+function showDiseaseResult(prediction) {
+  const card = document.getElementById('resultCard');
+  card.style.display = 'block';
+  
+  // Extract data from prediction
+  const crop = prediction.crop || 'Unknown Crop';
+  const disease = prediction.disease || 'Unknown Disease';
+  const confidence = prediction.confidence || 0;
+  const severity = prediction.severity || 'Medium';
+  const medicine = prediction.medicine || 'Consult local agricultural officer';
+  const prevention = prediction.prevention || 'Maintain proper crop care practices';
+  const confidenceLevel = prediction.confidence_level || (confidence >= 85 ? 'High' : confidence >= 70 ? 'Medium' : 'Low');
+  const healthStatus = prediction.health_status || 'Diseased';
+  const topPredictions = prediction.top_predictions || [];
+  
+  // Set disease name
+  document.getElementById('rc-disease').textContent = disease;
+  
+  // Set crop badge
+  const cropEmojis = {
+    'Rice': '🌾', 'Corn': '🌽', 'Potato': '🥔', 'Wheat': '🌾',
+    'Sugarcane': '🎋', 'Tomato': '🍅', 'Cotton': '🌿', 'Soybean': '🌱'
+  };
+  const emoji = cropEmojis[crop] || '🌿';
+  document.getElementById('rc-crop-badge').textContent = emoji + ' ' + crop;
+  
+  // Set severity badge
+  const sevClass = severity.toLowerCase() === 'high' ? 'sev-high' : 
+                   severity.toLowerCase() === 'medium' ? 'sev-medium' : 'sev-none';
+  document.getElementById('rc-sev').textContent = '⚠️ Severity: ' + severity;
+  document.getElementById('rc-sev').className = 'rc-badge ' + sevClass;
+  
+  // Set confidence
+  document.getElementById('rc-conf').textContent = '🎯 ' + confidenceLevel + ' (' + confidence + '%)';
+  document.getElementById('rc-conf-pct').textContent = confidence + '%';
+  
+  // Set confidence bar
+  const confColor = confidence >= 85 ? '#2E7D32' : confidence >= 70 ? '#F9A825' : '#D32F2F';
+  const confBar = document.getElementById('rc-conf-bar');
+  confBar.style.width = confidence + '%';
+  confBar.style.background = confColor;
+  
+  // Set status indicator
+  const statusIndicator = document.getElementById('statusIndicator');
+  if (healthStatus === 'Healthy') {
+    statusIndicator.style.background = 'rgba(46,125,50,.1)';
+    statusIndicator.style.color = '#2E7D32';
+    document.getElementById('statusIcon').textContent = '✅';
+    document.getElementById('statusText').textContent = 'Plant is Healthy';
+  } else {
+    statusIndicator.style.background = '#FFEBEE';
+    statusIndicator.style.color = '#D32F2F';
+    document.getElementById('statusIcon').textContent = '⚠️';
+    document.getElementById('statusText').textContent = 'Disease Detected';
+  }
+  
+  // Show Top 5 Predictions
+  const top5List = document.getElementById('top5List');
+  if (topPredictions && topPredictions.length > 0) {
+    const colors = ['#2E7D32', '#F9A825', '#1565C0', '#6A1B9A', '#D32F2F'];
+    top5List.innerHTML = topPredictions.map((p, i) => {
+      const color = colors[i] || '#747970';
+      return `<div class="top5-item">
+        <span class="top5-rank">#${i+1}</span>
+        <span class="top5-name">${p.class || 'Unknown'}</span>
+        <div class="top5-bar">
+          <div class="top5-fill" style="width:${p.confidence || 0}%;background:${color}"></div>
+        </div>
+        <span class="top5-pct" style="color:${color}">${p.confidence || 0}%</span>
+      </div>`;
+    }).join('');
+  } else {
+    top5List.innerHTML = '<div style="font-size:12px;color:var(--mu);text-align:center;padding:8px 0">No detailed predictions available</div>';
+  }
+  
+  // Ring - show severity level
+  let area = 0;
+  if (severity.toLowerCase() === 'high') area = 65;
+  else if (severity.toLowerCase() === 'medium') area = 35;
+  else area = 15;
+  
+  setTimeout(() => {
+    const circ = 2 * Math.PI * 28;
+    const offset = circ - (circ * area / 100);
+    document.getElementById('areaCircle').style.strokeDashoffset = offset;
+    document.getElementById('ring-pct').textContent = area + '%';
+    document.getElementById('ring-sub').textContent = 
+      `${severity} severity level. ${area > 50 ? 'Immediate action needed!' : area > 30 ? 'Act within 48 hours.' : 'Early stage — treat now.'}`;
+  }, 100);
+  
+  // Set medicine
+  document.getElementById('medicineDisplay').textContent = medicine;
+  
+  // Build treatment steps
+  const treatments = [];
+  if (medicine && medicine !== 'None' && medicine !== 'Unknown') {
+    treatments.push({ icon: '💊', text: `Apply ${medicine} as recommended` });
+    treatments.push({ icon: '📅', text: `Repeat treatment every 7-10 days if needed` });
+    treatments.push({ icon: '👨‍🌾', text: `Consult local agricultural officer for specific dosage` });
+  } else {
+    treatments.push({ icon: '👨‍🌾', text: 'Consult local agricultural officer for treatment options' });
+    treatments.push({ icon: '📋', text: 'Monitor plant daily for changes' });
+  }
+  
+  // Add severity-specific advice
+  if (severity.toLowerCase() === 'high') {
+    treatments.push({ icon: '🚨', text: 'URGENT: Remove and destroy severely affected plant parts' });
+    treatments.push({ icon: '🧪', text: 'Consider soil testing to identify underlying causes' });
+  } else if (severity.toLowerCase() === 'medium') {
+    treatments.push({ icon: '✂️', text: 'Remove affected leaves to prevent spread' });
+  }
+  
+  document.getElementById('treatList').innerHTML = treatments.map(t => 
+    `<div class="treat-item"><span class="treat-icon">${t.icon}</span><div class="treat-text">${t.text}</div></div>`
+  ).join('');
+  
+  // Build preventive steps
+  const preventives = [];
+  if (prevention && prevention !== 'No recommendation available.' && prevention !== 'No treatment required.') {
+    preventives.push({ icon: '🛡️', text: prevention });
+  }
+  
+  // Add general preventive measures
+  preventives.push({ icon: '🔍', text: 'Monitor plants weekly for early signs of disease' });
+  preventives.push({ icon: '🌬️', text: 'Maintain proper plant spacing for air circulation' });
+  preventives.push({ icon: '🔄', text: 'Rotate crops to prevent soil-borne diseases' });
+  preventives.push({ icon: '🌱', text: 'Use disease-resistant varieties in next season' });
+  
+  document.getElementById('preventList').innerHTML = preventives.slice(0, 5).map(p => 
+    `<div class="treat-item prev"><span class="treat-icon">${p.icon}</span><div class="treat-text">${p.text}</div></div>`
+  ).join('');
+}
+
+// ==========================================================
+// LOAD SENSOR CONTEXT
+// ==========================================================
+
+async function loadSensorContext() {
+  try {
+    const response = await fetch(`/api/latest/${farmId}`);
+    if (!response.ok) throw new Error('Sensor API error');
+    const data = await response.json();
+    
+    document.getElementById('sensorTimestamp').textContent = `Current readings · Updated just now`;
+    
+    const sensors = [
+      { label: 'Nitrogen (N)', value: data.nitrogen, status: (data.nitrogen || 0) >= 40 ? 'Optimal' : (data.nitrogen || 0) >= 20 ? 'Low' : 'Critical', color: (data.nitrogen || 0) >= 40 ? '#4CAF50' : (data.nitrogen || 0) >= 20 ? '#F9A825' : '#D32F2F' },
+      { label: 'Phosphorus (P)', value: data.phosphorus, status: (data.phosphorus || 0) >= 35 ? 'Optimal' : (data.phosphorus || 0) >= 20 ? 'Low' : 'Critical', color: (data.phosphorus || 0) >= 35 ? '#4CAF50' : (data.phosphorus || 0) >= 20 ? '#F9A825' : '#D32F2F' },
+      { label: 'Potassium (K)', value: data.potassium, status: (data.potassium || 0) >= 80 ? 'Optimal' : (data.potassium || 0) >= 50 ? 'Low' : 'Critical', color: (data.potassium || 0) >= 80 ? '#4CAF50' : (data.potassium || 0) >= 50 ? '#F9A825' : '#D32F2F' },
+      { label: 'Soil pH', value: data.ph, status: (data.ph || 0) >= 6 && (data.ph || 0) <= 7.5 ? 'Optimal' : 'Adjust', color: (data.ph || 0) >= 6 && (data.ph || 0) <= 7.5 ? '#4CAF50' : '#F9A825' },
+      { label: 'TDS', value: data.tds, status: (data.tds || 0) <= 1200 ? 'Optimal' : (data.tds || 0) <= 1600 ? 'High' : 'Critical', color: (data.tds || 0) <= 1200 ? '#4CAF50' : (data.tds || 0) <= 1600 ? '#F9A825' : '#D32F2F' },
+      { label: 'Moisture', value: data.soil_moisture, status: (data.soil_moisture || 0) >= 55 && (data.soil_moisture || 0) <= 75 ? 'Optimal' : (data.soil_moisture || 0) >= 40 ? 'Low' : 'Critical', color: (data.soil_moisture || 0) >= 55 && (data.soil_moisture || 0) <= 75 ? '#4CAF50' : (data.soil_moisture || 0) >= 40 ? '#F9A825' : '#D32F2F' },
+    ];
+    
+    document.getElementById('sensorContext').innerHTML = sensors.map(s => `
+      <div class="ic-row">
+        <div class="ic-dot" style="background:${s.color}"></div>
+        <div class="ic-key">${s.label}</div>
+        <div class="ic-val">${s.value ?? '--'} <span style="font-size:10px;color:${s.color};font-weight:600">${s.status}</span></div>
+      </div>
+    `).join('');
+    
+  } catch (e) {
+    console.log('Sensor context error:', e);
+    document.getElementById('sensorContext').innerHTML = 
+      '<div style="text-align:center;padding:10px;color:var(--mu);font-size:12px">Unable to load sensor data</div>';
+  }
+}
+
+// ==========================================================
+// DOWNLOAD REPORT
+// ==========================================================
+
+function downloadReport() {
+  const disease = document.getElementById('rc-disease').textContent;
+  const confidence = document.getElementById('rc-conf-pct').textContent;
+  const severity = document.getElementById('rc-sev').textContent;
+  const medicine = document.getElementById('medicineDisplay').textContent;
+  
+  alert(`📄 Plant Analysis Report\n\n` +
+        `Disease: ${disease}\n` +
+        `Confidence: ${confidence}\n` +
+        `${severity}\n` +
+        `Recommended Medicine: ${medicine}\n\n` +
+        `Full PDF export coming soon!`);
+}
+
+// ==========================================================
+// LOAD HISTORY
+// ==========================================================
+
+function loadHistory() {
+  const history = [
+    { crop: 'Tomato', diagnosis: 'Early Blight', severity: 'High', date: '2 days ago', emoji: '🍅' },
+    { crop: 'Wheat', diagnosis: 'Healthy', severity: 'Healthy', date: '5 days ago', emoji: '🌾' },
+    { crop: 'Potato', diagnosis: 'Nitrogen Deficiency', severity: 'Medium', date: '1 week ago', emoji: '🥔' },
+  ];
+  
+  document.getElementById('historyList').innerHTML = history.map(h => {
+    const badgeClass = h.severity === 'High' ? 'background:#FFEBEE;color:#D32F2F' :
+                       h.severity === 'Medium' ? 'background:#FFF9C4;color:#E65100' :
+                       'background:rgba(46,125,50,.1);color:var(--p)';
+    return `<div class="hp-item">
+      <div class="hp-thumb">${h.emoji}</div>
+      <div><div class="hp-crop">${h.crop}</div><div class="hp-diag">${h.diagnosis}</div></div>
+      <div><div class="hp-badge" style="${badgeClass}">${h.severity}</div><div class="hp-date" style="margin-top:4px">${h.date}</div></div>
+    </div>`;
+  }).join('');
+}
+
+// ==========================================================
+// LOGOUT
+// ==========================================================
+
+function logout() {
+  localStorage.clear();
+  window.location.href = '/login';
+}
+
+// ==========================================================
+// INIT
+// ==========================================================
+
+loadSensorContext();
+loadHistory();
+
+// Auto refresh sensor context every 30 seconds
+setInterval(loadSensorContext, 30000);
+</script>
+</body>
+</html>

@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>5G Live Stream - {{ location }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: white;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 500px;
+            margin: 0 auto;
+            background: #000;
+        }
+        .header {
+            padding: 12px 16px;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            flex-shrink: 0;
+        }
+        .live-badge {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .live-badge.live { background: #D32F2F; color: white; animation: pulse 1.5s infinite; }
+        .live-badge.connecting { background: #F9A825; color: #000; }
+        .live-badge.offline { background: #666; color: #aaa; }
+        .location-text { font-size: 12px; color: #aaa; margin-top: 2px; }
+        .connection-status {
+            font-size: 11px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.1);
+            color: #aaa;
+        }
+        .connection-status.connected { background: rgba(76,175,80,0.2); color: #4CAF50; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+        
+        .video-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0a0a0a;
+            position: relative;
+            min-height: 0;
+        }
+        video { width: 100%; height: 100%; object-fit: cover; }
+        .video-placeholder { text-align: center; color: #555; }
+        .video-placeholder .icon { font-size: 64px; display: block; margin-bottom: 16px; }
+        .video-placeholder .text { font-size: 16px; color: #666; }
+        .video-placeholder .sub-text { font-size: 12px; color: #444; margin-top: 8px; }
+        
+        .overlay-info {
+            position: absolute;
+            bottom: 20px;
+            left: 16px;
+            right: 16px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .stream-info { background: rgba(0,0,0,0.7); padding: 6px 12px; border-radius: 6px; font-size: 11px; color: #aaa; }
+        .latency { background: rgba(0,0,0,0.7); padding: 6px 12px; border-radius: 6px; font-size: 11px; color: #4CAF50; }
+        
+        .controls {
+            padding: 16px 20px;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-shrink: 0;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .controls button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 120px;
+            font-family: inherit;
+        }
+        .controls button:active { transform: scale(0.95); }
+        .btn-start { background: linear-gradient(135deg, #4CAF50, #388E3C); color: white; }
+        .btn-stop { background: linear-gradient(135deg, #D32F2F, #B71C1C); color: white; }
+        .btn-start:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .log {
+            position: absolute;
+            bottom: 80px;
+            right: 10px;
+            z-index: 10;
+            background: rgba(0,0,0,0.8);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 10px;
+            max-width: 200px;
+            max-height: 120px;
+            overflow-y: auto;
+            color: #4CAF50;
+            font-family: monospace;
+            opacity: 0.8;
+        }
+        .log::-webkit-scrollbar { width: 3px; }
+        .log::-webkit-scrollbar-thumb { background: #4CAF50; border-radius: 3px; }
+        
+        .permission-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.95);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            padding: 40px;
+            text-align: center;
+        }
+        .permission-overlay.active { display: flex; }
+        .permission-overlay .icon { font-size: 56px; margin-bottom: 20px; }
+        .permission-overlay h2 { font-size: 20px; margin-bottom: 10px; }
+        .permission-overlay p { color: #aaa; font-size: 14px; max-width: 300px; margin-bottom: 20px; }
+        .btn-permission {
+            padding: 14px 40px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-permission:active { transform: scale(0.95); }
+        
+        .debug-status {
+            position: absolute;
+            top: 60px;
+            left: 10px;
+            z-index: 10;
+            font-size: 9px;
+            color: #666;
+            font-family: monospace;
+            background: rgba(0,0,0,0.7);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+    </style>
+<script type="application/json" id="ice-servers-data">{{ ice_servers_json | default('null') | safe }}</script>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-weight:600;">📡 Live</span>
+                    <span class="live-badge offline" id="liveBadge">OFFLINE</span>
+                </div>
+                <div class="location-text">📍 {{ location }}</div>
+            </div>
+            <div class="connection-status" id="connectionStatus">Disconnected</div>
+        </div>
+
+        <div class="video-container" id="videoContainer">
+            <video id="localVideo" autoplay muted playsinline></video>
+            
+            <div class="video-placeholder" id="placeholder">
+                <span class="icon">📱</span>
+                <div class="text">Ready to Stream</div>
+                <div class="sub-text">Tap "Start Streaming" to begin</div>
+            </div>
+
+            <div class="overlay-info" id="overlayInfo" style="display:none;">
+                <div class="stream-info"><span style="color:#4CAF50;">●</span> Live</div>
+                <div class="latency" id="latencyDisplay">⏱ 0ms</div>
+            </div>
+
+            <div class="log" id="log">Ready...</div>
+            <div class="debug-status" id="debugStatus">🔌 Disconnected</div>
+
+            <div class="permission-overlay" id="permissionOverlay">
+                <div class="icon">🎥</div>
+                <h2>Camera Access Required</h2>
+                <p>This app needs camera access to stream video</p>
+                <button class="btn-permission" onclick="requestCameraPermission()">📷 Allow Camera</button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-start" id="startBtn" onclick="startStream()">🎥 Start Streaming</button>
+            <button class="btn-stop" id="stopBtn" onclick="stopStream()" style="display:none;">⏹ Stop</button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================================
+        // CONFIGURATION
+        // ==========================================================
+        
+        const SERVER_IP = window.location.hostname;
+        const PORT = window.location.port || (window.location.protocol === 'https:' ? 443 : 8000);
+        const LOCATION = '{{ location }}';
+        const LINK_ID = '{{ link_id }}';
+
+        // wss:// automatically when this page is loaded over https. Camera
+        // access (getUserMedia) is blocked by the browser on any origin
+        // that isn't localhost or https, so in real 5G use this page will
+        // always be https and therefore MUST use wss, not ws.
+        const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const WS_PORT = window.location.port ? `:${window.location.port}` : '';
+        const WS_URL = `${WS_PROTOCOL}//${SERVER_IP}${WS_PORT}/ws/mobile?location=${encodeURIComponent(LOCATION)}&link=${LINK_ID}`;
+        
+        // ==========================================================
+        // STATE
+        // ==========================================================
+        
+        let ws = null;
+        let stream = null;
+        let pingInterval = null;
+        let pc = null;
+        let isPaired = false;
+        let offerSent = false;
+        let iceCandidateBuffer = [];
+        
+        // ==========================================================
+        // DOM REFS
+        // ==========================================================
+        
+        const video = document.getElementById('localVideo');
+        const placeholder = document.getElementById('placeholder');
+        const overlayInfo = document.getElementById('overlayInfo');
+        const logDiv = document.getElementById('log');
+        const debugStatus = document.getElementById('debugStatus');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const liveBadge = document.getElementById('liveBadge');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const latencyDisplay = document.getElementById('latencyDisplay');
+        const permissionOverlay = document.getElementById('permissionOverlay');
+        
+        // ==========================================================
+        // LOGGING
+        // ==========================================================
+        
+        function log(msg) {
+            const time = new Date().toLocaleTimeString();
+            logDiv.textContent += `[${time}] ${msg}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(`[${time}] ${msg}`);
+            debugStatus.textContent = msg.substring(0, 30);
+        }
+        
+        function updateStatus(isConnected, isLive = false) {
+            if (isConnected && isLive) {
+                liveBadge.className = 'live-badge live';
+                liveBadge.textContent = 'LIVE';
+                connectionStatus.className = 'connection-status connected';
+                connectionStatus.textContent = '● Streaming';
+                debugStatus.textContent = '🟢 LIVE';
+            } else if (isConnected) {
+                liveBadge.className = 'live-badge connecting';
+                liveBadge.textContent = 'CONNECTING';
+                connectionStatus.className = 'connection-status';
+                connectionStatus.textContent = 'Connecting...';
+                debugStatus.textContent = '⏳ Connecting';
+            } else {
+                liveBadge.className = 'live-badge offline';
+                liveBadge.textContent = 'OFFLINE';
+                connectionStatus.className = 'connection-status';
+                connectionStatus.textContent = 'Disconnected';
+                debugStatus.textContent = '🔴 Disconnected';
+            }
+        }
+        
+        // ==========================================================
+        // CAMERA
+        // ==========================================================
+        
+        async function requestCameraPermission() {
+            permissionOverlay.classList.remove('active');
+            try {
+                const testStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                testStream.getTracks().forEach(track => track.stop());
+                log('✅ Camera permission granted');
+                startBtn.disabled = false;
+            } catch(e) {
+                log('❌ Permission denied: ' + e.message);
+                permissionOverlay.classList.add('active');
+            }
+        }
+        
+        async function getCamera() {
+            try {
+                try {
+                    const perm = await navigator.permissions.query({ name: 'camera' });
+                    if (perm.state === 'denied') {
+                        permissionOverlay.classList.add('active');
+                        return null;
+                    }
+                } catch(e) {}
+                
+                const constraints = {
+                    video: {
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                };
+                
+                return await navigator.mediaDevices.getUserMedia(constraints);
+            } catch(e) {
+                log(`❌ Camera error: ${e.message}`);
+                if (e.message.includes('Permission')) {
+                    permissionOverlay.classList.add('active');
+                }
+                return null;
+            }
+        }
+        
+        // ==========================================================
+        // WEBRTC - FIXED
+        // ==========================================================
+        
+        // ICE servers come from the server (main.py) so a TURN server can
+        // be configured via env vars without editing this file. STUN alone
+        // is usually NOT enough on 5G/cellular — carrier networks almost
+        // always sit behind Carrier-Grade NAT, which STUN can't traverse.
+        // See NETWORK_SETUP.md.
+        let ICE_SERVERS_LIST = [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' }
+        ];
+        try {
+            const iceDataEl = document.getElementById('ice-servers-data');
+            const serverIce = iceDataEl ? JSON.parse(iceDataEl.textContent || 'null') : null;
+            if (serverIce && serverIce.length) ICE_SERVERS_LIST = serverIce;
+        } catch (e) { /* fall back to STUN-only above */ }
+
+        const STUN_SERVERS = {
+            iceServers: ICE_SERVERS_LIST,
+            iceCandidatePoolSize: 10
+        };
+        
+        function createPeerConnection() {
+            log('🔧 Creating PeerConnection...');
+            pc = new RTCPeerConnection(STUN_SERVERS);
+            
+            if (stream) {
+                stream.getTracks().forEach(track => {
+                    pc.addTrack(track, stream);
+                    log(`📤 Added ${track.kind} track`);
+                });
+            }
+            
+            // Send ICE candidates to dashboard
+            pc.onicecandidate = function(event) {
+                if (event.candidate && ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({
+                        type: 'ice_candidate',
+                        candidate: event.candidate
+                    }));
+                    log('🧊 Sent ICE candidate to dashboard');
+                }
+            };
+            
+            // Monitor ICE connection
+            pc.oniceconnectionstatechange = function() {
+                log(`🧊 ICE state: ${pc.iceConnectionState}`);
+                if (pc.iceConnectionState === 'connected') {
+                    log('✅ ICE connected!');
+                }
+                if (pc.iceConnectionState === 'failed') {
+                    log('❌ ICE failed - restarting');
+                    pc.restartIce();
+                }
+            };
+            
+            // Monitor connection state
+            pc.onconnectionstatechange = function() {
+                log(`🔗 Connection: ${pc.connectionState}`);
+                if (pc.connectionState === 'connected') {
+                    log('✅ WebRTC connected!');
+                    updateStatus(true, true);
+                }
+                if (pc.connectionState === 'failed') {
+                    log('❌ Connection failed - restarting');
+                    pc.restartIce();
+                }
+            };
+            
+            // Handle incoming tracks
+            pc.ontrack = function(event) {
+                log('🎥 Track received from dashboard');
+            };
+            
+            // Process any buffered ICE candidates
+            if (iceCandidateBuffer.length > 0) {
+                log(`📦 Processing ${iceCandidateBuffer.length} buffered ICE candidates`);
+                iceCandidateBuffer.forEach(candidate => {
+                    pc.addIceCandidate(candidate).catch(e => log(`❌ ICE error: ${e.message}`));
+                });
+                iceCandidateBuffer = [];
+            }
+            
+            return pc;
+        }
+        
+        async function sendOffer() {
+            if (!pc) {
+                log('⚠️ No peer connection, creating...');
+                createPeerConnection();
+            }
+            
+            try {
+                log('📤 Creating offer...');
+                const offer = await pc.createOffer({
+                    offerToReceiveVideo: true,
+                    offerToReceiveAudio: true
+                });
+                await pc.setLocalDescription(offer);
+                log('✅ Local description set');
+                
+                ws.send(JSON.stringify({
+                    type: 'offer',
+                    offer: offer
+                }));
+                offerSent = true;
+                log('📤 Offer sent to dashboard ✅');
+                
+            } catch(e) {
+                log(`❌ Offer error: ${e.message}`);
+            }
+        }
+        
+        // ==========================================================
+        // STREAMING
+        // ==========================================================
+        
+        async function startStream() {
+            log('🎥 Starting stream...');
+            startBtn.disabled = true;
+            startBtn.textContent = '⏳ Starting...';
+            
+            const cameraStream = await getCamera();
+            if (!cameraStream) {
+                startBtn.disabled = false;
+                startBtn.textContent = '🎥 Start Streaming';
+                return;
+            }
+            
+            stream = cameraStream;
+            video.srcObject = stream;
+            video.style.display = 'block';
+            placeholder.style.display = 'none';
+            
+            // Reset ICE buffer
+            iceCandidateBuffer = [];
+            
+            createPeerConnection();
+            connectWebSocket();
+        }
+        
+        function connectWebSocket() {
+            log(`🔌 Connecting to ${WS_URL}...`);
+            
+            ws = new WebSocket(WS_URL);
+            
+            ws.onopen = () => {
+                log('✅ WebSocket connected!');
+                updateStatus(true, false);
+                overlayInfo.style.display = 'flex';
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'block';
+                
+                pingInterval = setInterval(() => {
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
+                    }
+                }, 5000);
+            };
+            
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    log(`📩 Received: ${data.type}`);
+                    
+                    if (data.type === 'connected') {
+                        log(`✅ Client ID: ${data.client_id}`);
+                    }
+                    
+                    if (data.type === 'pong') {
+                        const latency = Date.now() - data.timestamp;
+                        latencyDisplay.textContent = `⏱ ${latency}ms`;
+                    }
+                    
+                    if (data.type === 'paired') {
+                        log('🔗 Paired with dashboard!');
+                        isPaired = true;
+                        updateStatus(true, true);
+                        
+                        // Send offer after pairing
+                        setTimeout(() => {
+                            if (!offerSent) {
+                                log('📤 Sending offer after pairing...');
+                                sendOffer();
+                            }
+                        }, 500);
+                    }
+                    
+                    if (data.type === 'answer') {
+                        log('📩 Received answer');
+                        if (pc) {
+                            pc.setRemoteDescription(new RTCSessionDescription(data.answer))
+                                .then(() => log('✅ Answer set'))
+                                .catch(e => log(`❌ Answer error: ${e.message}`));
+                        }
+                    }
+                    
+                    if (data.type === 'ice_candidate') {
+                        log('🧊 Received ICE candidate from dashboard');
+                        if (pc) {
+                            pc.addIceCandidate(new RTCIceCandidate(data.candidate))
+                                .then(() => log('✅ ICE candidate added'))
+                                .catch(e => log(`❌ ICE error: ${e.message}`));
+                        } else {
+                            // Buffer if PC not ready
+                            log('📦 Buffering ICE candidate (PC not ready)');
+                            iceCandidateBuffer.push(data.candidate);
+                        }
+                    }
+                    
+                } catch(e) {
+                    log(`❌ Parse error: ${e.message}`);
+                }
+            };
+            
+            ws.onclose = () => {
+                log('📱 Connection closed');
+                updateStatus(false, false);
+                if (pingInterval) clearInterval(pingInterval);
+                startBtn.style.display = 'block';
+                stopBtn.style.display = 'none';
+                startBtn.disabled = false;
+                startBtn.textContent = '🎥 Start Streaming';
+                offerSent = false;
+                isPaired = false;
+            };
+            
+            ws.onerror = () => {
+                log('❌ WebSocket error');
+                updateStatus(false, false);
+            };
+        }
+        
+        function stopStream() {
+            log('⏹ Stopping stream...');
+            
+            if (ws) { ws.close(); ws = null; }
+            if (pc) { pc.close(); pc = null; }
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            
+            video.srcObject = null;
+            video.style.display = 'none';
+            placeholder.style.display = 'block';
+            overlayInfo.style.display = 'none';
+            if (pingInterval) clearInterval(pingInterval);
+            offerSent = false;
+            isPaired = false;
+            iceCandidateBuffer = [];
+            
+            startBtn.style.display = 'block';
+            stopBtn.style.display = 'none';
+            startBtn.disabled = false;
+            startBtn.textContent = '🎥 Start Streaming';
+            updateStatus(false, false);
+            log('⏹ Stream stopped');
+        }
+        
+        function showToast(msg) {
+            log(`💬 ${msg}`);
+        }
+        
+        // ==========================================================
+        // INIT
+        // ==========================================================
+        
+        window.onload = function() {
+            log('🚀 Loading...');
+            log(`📍 Location: ${LOCATION}`);
+            log(`🌐 Server: ${SERVER_IP}:${PORT}`);
+            log(`🔗 WebSocket: ${WS_URL}`);
+
+            const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+            if (window.location.protocol !== 'https:' && !isLocalhost) {
+                log('❌ NOT HTTPS! Camera access will be blocked by the browser.');
+                log('   Open this page via an https:// URL instead.');
+            }
+
+            setTimeout(async () => {
+                try {
+                    const perm = await navigator.permissions.query({ name: 'camera' });
+                    if (perm.state === 'denied') {
+                        permissionOverlay.classList.add('active');
+                    }
+                } catch(e) {}
+            }, 500);
+            
+            log('💡 Tap "Start Streaming" to begin');
+        };
+        
+        window.onbeforeunload = function() {
+            if (pc) { pc.close(); }
+            if (ws) { ws.close(); }
+        };
+    </script>
+</body>
+</html>

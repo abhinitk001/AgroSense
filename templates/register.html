@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Account — AgroSense</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p:#2E7D32;--pd:#1B5E20;--s:#4CAF50;--sl:#C8E6C9;--sa:#A5D6A7;
+  --bg:#F5F7FA;--sf:#FFFFFF;--tx:#1C2B1E;--mu:#747970;--bd:#E0E5E0;
+  --dr:#D32F2F;--drl:#FFEBEE;--wa:#F9A825;
+  --r:10px;--rl:14px;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 4px 12px rgba(0,0,0,.05);
+  --shm:0 8px 24px rgba(0,0,0,.09);
+}
+html,body{height:100%}
+body{font-family:'Inter',-apple-system,sans-serif;color:var(--tx);line-height:1.6;-webkit-font-smoothing:antialiased;display:flex;min-height:100vh;background:#fff}
+
+/* ── LAYOUT ── */
+.split{display:flex;width:100%;min-height:100vh}
+
+/* ── LEFT: Form side ── */
+.left{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:40px;overflow-y:auto;background:#fff}
+.form-box{width:100%;max-width:500px}
+
+/* Logo */
+.logo-row{display:flex;align-items:center;gap:9px;text-decoration:none;margin-bottom:36px}
+.logo-box{width:32px;height:32px;background:var(--p);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-text{font-size:17px;font-weight:800;color:var(--tx);letter-spacing:-.3px}
+
+/* Header */
+.form-tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--p);margin-bottom:10px}
+.form-title{font-size:26px;font-weight:800;letter-spacing:-1px;color:var(--tx);margin-bottom:5px}
+.form-sub{font-size:13px;color:var(--mu);margin-bottom:28px}
+.form-sub a{color:var(--p);font-weight:600;text-decoration:none}
+.form-sub a:hover{text-decoration:underline}
+
+/* Step indicators */
+.steps-bar{display:flex;align-items:center;gap:0;margin-bottom:28px}
+.step-item{display:flex;align-items:center;gap:0;flex:1}
+.step-circle{width:28px;height:28px;border-radius:50%;border:2px solid var(--bd);background:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--mu);transition:all .3s;flex-shrink:0;cursor:default}
+.step-circle.active{border-color:var(--p);background:var(--p);color:#fff}
+.step-circle.done{border-color:var(--p);background:var(--p);color:#fff}
+.step-label{font-size:10px;font-weight:600;color:var(--mu);margin-left:6px;white-space:nowrap;transition:color .3s}
+.step-label.active{color:var(--p)}
+.step-line{flex:1;height:2px;background:var(--bd);margin:0 8px;transition:background .3s}
+.step-line.done{background:var(--p)}
+
+/* Steps panels */
+.step-panel{display:none}
+.step-panel.active{display:block}
+
+/* Section labels */
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mu);margin-bottom:14px;margin-top:4px;display:flex;align-items:center;gap:8px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--bd)}
+
+/* Grid layouts */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+/* Form fields */
+.form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.form-label{font-size:12px;font-weight:600;color:var(--tx);display:flex;align-items:center;gap:4px}
+.required{color:var(--dr);font-size:11px}
+.input-wrap{position:relative}
+.form-input,.form-select{width:100%;padding:10px 13px;border:1.5px solid var(--bd);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--tx);outline:none;transition:all .22s;background:#fff}
+.form-input::placeholder{color:#B8BDB9}
+.form-input:focus,.form-select:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(46,125,50,.1)}
+.form-input.error,.form-select.error{border-color:var(--dr);box-shadow:0 0 0 3px rgba(211,47,47,.08)}
+.form-input.valid{border-color:var(--s)}
+.input-suffix{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--mu);pointer-events:none;font-weight:500}
+.toggle-pwd{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--mu);display:flex;align-items:center;padding:2px}
+.toggle-pwd:hover{color:var(--tx)}
+.field-error{font-size:11px;color:var(--dr);font-weight:500;margin-top:2px;display:none;align-items:center;gap:4px}
+.field-error.show{display:flex}
+.field-hint{font-size:11px;color:var(--mu);margin-top:2px}
+
+/* Password strength */
+.pwd-strength{margin-top:6px}
+.strength-bar-row{display:flex;gap:4px;margin-bottom:5px}
+.strength-seg{flex:1;height:3px;background:var(--bd);border-radius:3px;transition:background .3s}
+.strength-label{font-size:10px;font-weight:700}
+
+/* Phone input */
+.phone-wrap{display:flex;gap:0}
+.phone-code{padding:10px 11px;border:1.5px solid var(--bd);border-right:none;border-radius:var(--r) 0 0 var(--r);font-size:13px;font-family:inherit;color:var(--tx);outline:none;background:#f9fafb;font-weight:600;width:72px;cursor:default;flex-shrink:0;transition:border-color .22s}
+.phone-input{border-radius:0 var(--r) var(--r) 0;flex:1}
+.phone-input:focus{box-shadow:none}
+.phone-wrap:focus-within .phone-code,.phone-wrap:focus-within .phone-input{border-color:var(--p)}
+.phone-wrap:focus-within .phone-code{box-shadow:-3px 0 0 rgba(46,125,50,.1),-3px -3px 0 rgba(46,125,50,.1),-3px 3px 0 rgba(46,125,50,.1)}
+
+/* Crop type pills */
+.crop-pills{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+.crop-pill{padding:5px 12px;border:1.5px solid var(--bd);border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;user-select:none;background:#fff}
+.crop-pill:hover{border-color:var(--s);color:var(--p)}
+.crop-pill.selected{border-color:var(--p);background:rgba(46,125,50,.08);color:var(--p);font-weight:600}
+
+/* Irrigation & irrigation type */
+.radio-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.radio-card{border:1.5px solid var(--bd);border-radius:var(--r);padding:11px 13px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px}
+.radio-card:hover{border-color:var(--s)}
+.radio-card.selected{border-color:var(--p);background:rgba(46,125,50,.07)}
+.radio-card input{accent-color:var(--p);width:14px;height:14px;flex-shrink:0}
+.radio-label{font-size:12px;font-weight:500}
+.radio-sub{font-size:10px;color:var(--mu);margin-top:1px}
+
+/* Step 3: Preview */
+.preview-grid{display:flex;flex-direction:column;gap:10px}
+.preview-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bg)}
+.preview-row:last-child{border-bottom:none}
+.pr-key{font-size:12px;color:var(--mu);font-weight:500}
+.pr-val{font-size:12px;font-weight:600;text-align:right;max-width:240px;word-break:break-word}
+
+/* Terms */
+.terms-check{display:flex;align-items:flex-start;gap:9px;margin-top:4px}
+.terms-check input{margin-top:2px;width:15px;height:15px;accent-color:var(--p);flex-shrink:0;cursor:pointer}
+.terms-text{font-size:12px;color:var(--mu);line-height:1.6}
+.terms-text a{color:var(--p);font-weight:600;text-decoration:none}
+.terms-text a:hover{text-decoration:underline}
+
+/* Nav buttons */
+.form-nav{display:flex;gap:10px;margin-top:20px}
+.back-btn{padding:11px 22px;border:1.5px solid var(--bd);border-radius:var(--r);background:#fff;font-size:13px;font-weight:600;color:var(--tx);cursor:pointer;font-family:inherit;transition:all .2s;display:flex;align-items:center;gap:6px}
+.back-btn:hover{border-color:var(--mu);background:var(--bg)}
+.next-btn,.submit-btn{flex:1;padding:12px;background:var(--p);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .22s;box-shadow:0 4px 14px rgba(46,125,50,.22)}
+.next-btn:hover,.submit-btn:hover{background:var(--pd);transform:translateY(-1px);box-shadow:0 8px 22px rgba(46,125,50,.28)}
+.next-btn:disabled,.submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-spinner{width:15px;height:15px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .75s linear infinite;display:none}
+.submit-btn.loading .btn-text{display:none}
+.submit-btn.loading .btn-spinner{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Sign-in link */
+.signin-link{text-align:center;margin-top:18px;font-size:13px;color:var(--mu)}
+.signin-link a{color:var(--p);font-weight:700;text-decoration:none}
+.signin-link a:hover{text-decoration:underline}
+
+/* Success screen */
+.success-screen{display:none;text-align:center;padding:40px 20px}
+.success-icon{width:72px;height:72px;background:rgba(46,125,50,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:pop .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.success-title{font-size:24px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px}
+.success-sub{font-size:14px;color:var(--mu);line-height:1.7;margin-bottom:28px;max-width:320px;margin-left:auto;margin-right:auto}
+.go-btn{display:inline-flex;align-items:center;gap:8px;padding:13px 28px;background:var(--p);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;box-shadow:0 4px 14px rgba(46,125,50,.25);transition:all .2s}
+.go-btn:hover{background:var(--pd);transform:translateY(-1px)}
+
+/* ── RIGHT PANEL ── */
+.right{width:42%;background:linear-gradient(150deg,var(--pd) 0%,#2E7D32 50%,#43A047 100%);display:flex;flex-direction:column;justify-content:center;padding:56px 52px;position:relative;overflow:hidden;flex-shrink:0}
+.right::before{content:'';position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:rgba(255,255,255,.04);border-radius:50%}
+.right::after{content:'';position:absolute;bottom:-80px;left:-80px;width:280px;height:280px;background:rgba(0,0,0,.06);border-radius:50%}
+
+.rp-tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.55);margin-bottom:12px;z-index:1;position:relative}
+.rp-title{font-size:28px;font-weight:800;color:#fff;letter-spacing:-1px;line-height:1.2;margin-bottom:14px;z-index:1;position:relative}
+.rp-sub{font-size:14px;color:rgba(255,255,255,.65);line-height:1.75;margin-bottom:36px;z-index:1;position:relative}
+
+.feature-list{display:flex;flex-direction:column;gap:16px;z-index:1;position:relative;margin-bottom:40px}
+.feat-item{display:flex;gap:13px;align-items:flex-start}
+.feat-num{width:26px;height:26px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px}
+.feat-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:3px}
+.feat-desc{font-size:12px;color:rgba(255,255,255,.6);line-height:1.6}
+
+.rp-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;z-index:1;position:relative}
+.rp-stat{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:14px}
+.rp-stat-val{font-size:22px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.rp-stat-lbl{font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;font-weight:500}
+
+/* Toast */
+.toast{position:fixed;bottom:28px;right:28px;background:var(--tx);color:#fff;padding:11px 16px;border-radius:10px;font-size:12px;font-weight:500;box-shadow:var(--shm);transform:translateY(16px);opacity:0;transition:all .28s;z-index:999;max-width:300px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{background:var(--p)}
+
+@media(max-width:960px){.right{display:none}.left{padding:28px 24px}}
+</style>
+</head>
+<body>
+<div class="split">
+
+  <!-- ── LEFT: FORM ── -->
+  <div class="left">
+    <div class="form-box">
+
+      <!-- Logo -->
+      <a href="/home" class="logo-row">
+        <div class="logo-box"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
+        <span class="logo-text">AgroSense</span>
+      </a>
+
+      <!-- Header -->
+      <div class="form-tag">Step <span id="stepLabel">1</span> of 3</div>
+      <h2 class="form-title" id="stepTitle">Your account details</h2>
+      <p class="form-sub" id="stepSub">Already registered? <a href="/login">Sign in instead</a></p>
+
+      <!-- Step indicators -->
+      <div class="steps-bar">
+        <div class="step-item">
+          <div class="step-circle active" id="sc1">1</div>
+          <span class="step-label active" id="sl1">Account</span>
+        </div>
+        <div class="step-line" id="line1"></div>
+        <div class="step-item">
+          <div class="step-circle" id="sc2">2</div>
+          <span class="step-label" id="sl2">Farm Info</span>
+        </div>
+        <div class="step-line" id="line2"></div>
+        <div class="step-item">
+          <div class="step-circle" id="sc3">3</div>
+          <span class="step-label" id="sl3">Review</span>
+        </div>
+      </div>
+
+      <!-- ── STEP 1: Account ── -->
+      <div class="step-panel active" id="step1">
+        <div class="section-label">Personal Details</div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label" for="firstName">First Name <span class="required">*</span></label>
+            <input class="form-input" type="text" id="firstName" placeholder="Rajesh" autocomplete="given-name">
+            <span class="field-error" id="firstName-err"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="3"/></svg>Required</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="lastName">Last Name <span class="required">*</span></label>
+            <input class="form-input" type="text" id="lastName" placeholder="Kumar" autocomplete="family-name">
+            <span class="field-error" id="lastName-err"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="3"/></svg>Required</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="regEmail">Email Address <span class="required">*</span></label>
+          <div class="input-wrap">
+            <input class="form-input" type="email" id="regEmail" placeholder="you@example.com" autocomplete="email">
+          </div>
+          <span class="field-error" id="email-err"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="3"/></svg>Enter a valid email address</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="phone">Phone Number <span class="required">*</span></label>
+          <div class="phone-wrap">
+            <div class="phone-code">+91 🇮🇳</div>
+            <input class="form-input phone-input" type="tel" id="phone" placeholder="98765 43210" maxlength="10" autocomplete="tel">
+          </div>
+          <span class="field-error" id="phone-err"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="3"/></svg>Enter a 10-digit Indian mobile number</span>
+        </div>
+
+        <div class="section-label">Set Password</div>
+        <div class="form-group">
+          <label class="form-label" for="password">Password <span class="required">*</span></label>
+          <div class="input-wrap">
+            <input class="form-input" type="password" id="password" placeholder="Min. 8 characters" oninput="checkStrength(this.value)" autocomplete="new-password">
+            <button class="toggle-pwd" type="button" onclick="togglePwd('password','ep1')">
+              <svg id="ep1" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <div class="pwd-strength" id="pwdStrength" style="display:none">
+            <div class="strength-bar-row">
+              <div class="strength-seg" id="seg1"></div>
+              <div class="strength-seg" id="seg2"></div>
+              <div class="strength-seg" id="seg3"></div>
+              <div class="strength-seg" id="seg4"></div>
+            </div>
+            <span class="strength-label" id="strengthLabel"></span>
+          </div>
+          <span class="field-error" id="password-err"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="3"/></svg>Minimum 8 characters with a number or symbol</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="confirm">Confirm Password <span class="required">*</span></label>
+          <div class="input-wrap">
+            <input class="form-input" type="password" id="confirm" placeholder="Repeat password" autocomplete="new-password">
+            <button class="toggle-pwd" type="button" onclick="togglePwd('confirm','ep2')">
+              <svg id="ep2" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <span class="field-error" id="confirm-err"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="3"/></svg>Passwords do not match</span>
+        </div>
+        <div class="form-nav">
+          <button class="next-btn" onclick="goStep(2)">
+            Continue <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+        <div class="signin-link">Already have an account? <a href="/login">Sign in</a></div>
+      </div>
+
+      <!-- ── STEP 2: Farm Info ── -->
+      <div class="step-panel" id="step2">
+        <div class="section-label">Farm Identity</div>
+        <div class="form-group">
+          <label class="form-label" for="farmName">Farm / Establishment Name <span class="required">*</span></label>
+          <input class="form-input" type="text" id="farmName" placeholder="e.g. Green Valley Farm">
+          <span class="field-error" id="farmName-err"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="3"/></svg>Required</span>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label" for="district">District <span class="required">*</span></label>
+            <input class="form-input" type="text" id="district" placeholder="e.g. Ludhiana">
+            <span class="field-error" id="district-err"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>Required</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="state">State <span class="required">*</span></label>
+            <select class="form-select" id="state">
+              <option value="">Select state</option>
+              <option>Punjab</option><option>Haryana</option><option>Uttar Pradesh</option>
+              <option>Madhya Pradesh</option><option>Maharashtra</option><option>Rajasthan</option>
+              <option>Andhra Pradesh</option><option>Telangana</option><option>Karnataka</option>
+              <option>Gujarat</option><option>Bihar</option><option>West Bengal</option>
+              <option>Odisha</option><option>Assam</option><option>Other</option>
+            </select>
+            <span class="field-error" id="state-err"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>Required</span>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label" for="farmSize">Farm Size <span class="required">*</span></label>
+            <div class="input-wrap">
+              <input class="form-input" type="number" id="farmSize" placeholder="e.g. 45" min="0.5" max="10000" style="padding-right:48px">
+              <span class="input-suffix">Acres</span>
+            </div>
+            <span class="field-error" id="farmSize-err"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>Enter a valid size</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="soilType">Soil Type</label>
+            <select class="form-select" id="soilType">
+              <option value="">Not sure</option>
+              <option>Alluvial (दोमट)</option><option>Black Cotton (काली)</option>
+              <option>Red & Laterite (लाल)</option><option>Sandy (बलुई)</option>
+              <option>Clay (चिकनी)</option><option>Loamy (बलुई दोमट)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="section-label">Irrigation</div>
+        <div class="form-group">
+          <label class="form-label">Irrigation Source</label>
+          <div class="radio-grid">
+            <label class="radio-card selected" id="irr_canal" onclick="selectRadio('irr','canal')"><input type="radio" name="irrigation" value="canal" checked><div><div class="radio-label">Canal / River</div><div class="radio-sub">Gravity-fed water</div></div></label>
+            <label class="radio-card" id="irr_bore" onclick="selectRadio('irr','bore')"><input type="radio" name="irrigation" value="bore"><div><div class="radio-label">Borewell / Tubewell</div><div class="radio-sub">Groundwater</div></div></label>
+            <label class="radio-card" id="irr_rain" onclick="selectRadio('irr','rain')"><input type="radio" name="irrigation" value="rain"><div><div class="radio-label">Rainfed</div><div class="radio-sub">Monsoon dependent</div></div></label>
+            <label class="radio-card" id="irr_drip" onclick="selectRadio('irr','drip')"><input type="radio" name="irrigation" value="drip"><div><div class="radio-label">Drip / Sprinkler</div><div class="radio-sub">Micro-irrigation</div></div></label>
+          </div>
+        </div>
+
+        <div class="section-label">Main Crops Grown</div>
+        <div class="form-group">
+          <label class="form-label">Select all that apply</label>
+          <div class="crop-pills" id="cropPills">
+            <span class="crop-pill" onclick="togglePill(this)">🌾 Wheat</span>
+            <span class="crop-pill" onclick="togglePill(this)">🍚 Rice</span>
+            <span class="crop-pill" onclick="togglePill(this)">🌽 Maize</span>
+            <span class="crop-pill" onclick="togglePill(this)">🌻 Mustard</span>
+            <span class="crop-pill" onclick="togglePill(this)">🫘 Chickpea</span>
+            <span class="crop-pill" onclick="togglePill(this)">🌱 Soybean</span>
+            <span class="crop-pill" onclick="togglePill(this)">🌿 Cotton</span>
+            <span class="crop-pill" onclick="togglePill(this)">🎋 Sugarcane</span>
+            <span class="crop-pill" onclick="togglePill(this)">🥔 Potato</span>
+            <span class="crop-pill" onclick="togglePill(this)">🍅 Tomato</span>
+            <span class="crop-pill" onclick="togglePill(this)">🧅 Onion</span>
+            <span class="crop-pill" onclick="togglePill(this)">🌶️ Chilli</span>
+          </div>
+        </div>
+
+        <div class="section-label">IoT Sensors</div>
+        <div class="form-group">
+          <label class="form-label" for="nodeCount">Number of ESP32 Sensor Nodes</label>
+          <div class="input-wrap">
+            <input class="form-input" type="number" id="nodeCount" placeholder="e.g. 3" min="0" max="50" style="padding-right:58px" value="0">
+            <span class="input-suffix">nodes</span>
+          </div>
+          <span class="field-hint">You can add sensors later from the dashboard</span>
+        </div>
+
+        <div class="form-nav">
+          <button class="back-btn" onclick="goStep(1)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg> Back</button>
+          <button class="next-btn" onclick="goStep(3)">
+            Preview & Confirm <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── STEP 3: Review ── -->
+      <div class="step-panel" id="step3">
+        <div class="section-label">Account</div>
+        <div class="preview-grid">
+          <div class="preview-row"><span class="pr-key">Full Name</span><span class="pr-val" id="rv-name">—</span></div>
+          <div class="preview-row"><span class="pr-key">Email</span><span class="pr-val" id="rv-email">—</span></div>
+          <div class="preview-row"><span class="pr-key">Phone</span><span class="pr-val" id="rv-phone">—</span></div>
+        </div>
+        <div class="section-label" style="margin-top:18px">Farm</div>
+        <div class="preview-grid">
+          <div class="preview-row"><span class="pr-key">Farm Name</span><span class="pr-val" id="rv-farm">—</span></div>
+          <div class="preview-row"><span class="pr-key">Location</span><span class="pr-val" id="rv-loc">—</span></div>
+          <div class="preview-row"><span class="pr-key">Farm Size</span><span class="pr-val" id="rv-size">—</span></div>
+          <div class="preview-row"><span class="pr-key">Soil Type</span><span class="pr-val" id="rv-soil">—</span></div>
+          <div class="preview-row"><span class="pr-key">Irrigation</span><span class="pr-val" id="rv-irr">—</span></div>
+          <div class="preview-row"><span class="pr-key">Crops</span><span class="pr-val" id="rv-crops">—</span></div>
+          <div class="preview-row"><span class="pr-key">IoT Nodes</span><span class="pr-val" id="rv-nodes">—</span></div>
+        </div>
+
+        <div style="margin-top:18px;padding:12px 14px;background:rgba(46,125,50,.06);border-radius:var(--r);border:1px solid rgba(46,125,50,.2);font-size:12px;color:var(--p);line-height:1.6">
+          ✅ AgroSense is <strong>free for 30 days</strong>. No credit card required. You can upgrade or cancel anytime.
+        </div>
+
+        <div class="terms-check" style="margin-top:14px">
+          <input type="checkbox" id="termsCheck">
+          <span class="terms-text">I agree to the AgroSense <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>. I understand my farm data will be used to provide personalised recommendations.</span>
+        </div>
+        <span class="field-error" id="terms-err" style="margin-top:6px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg> Please accept the terms to continue</span>
+
+        <div class="form-nav" style="margin-top:18px">
+          <button class="back-btn" onclick="goStep(2)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg> Back</button>
+          <button class="submit-btn" id="submitBtn" onclick="handleSubmit()">
+            <span class="btn-text">Create My Account</span>
+            <svg class="btn-text" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            <div class="btn-spinner"></div>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── SUCCESS ── -->
+      <div class="success-screen" id="successScreen">
+        <div class="success-icon">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h2 class="success-title">Welcome to AgroSense! 🌾</h2>
+        <p class="success-sub">Your farm account has been created. Your dashboard is ready with live sensor monitoring, AI crop advice, and market prices.</p>
+        <a href="/dashboard" class="go-btn">
+          Go to my Dashboard
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+        <div style="margin-top:20px;font-size:12px;color:var(--mu)">A confirmation email has been sent to <strong id="conf-email">—</strong></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── RIGHT: Visual ── -->
+  <div class="right">
+    <div class="rp-tag">Why farmers choose AgroSense</div>
+    <h2 class="rp-title">Your farm.<br>Your data.<br>Your advantage.</h2>
+    <p class="rp-sub">Set up once, gain insights forever. AgroSense connects your soil sensors, weather, and market data into decisions that grow your profit every season.</p>
+
+    <div class="feature-list">
+      <div class="feat-item">
+        <div class="feat-num">1</div>
+        <div><div class="feat-title">Plant your ESP32 IoT sensors</div><div class="feat-desc">NPK, TDS, pH, temperature, and humidity — live on your dashboard in under 30 minutes.</div></div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-num">2</div>
+        <div><div class="feat-title">AI diagnoses plant diseases instantly</div><div class="feat-desc">Upload a photo. Get the disease name, confidence level, treatment, and fertilizer names in 30 seconds.</div></div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-num">3</div>
+        <div><div class="feat-title">Know exactly when to sell</div><div class="feat-desc">Live mandi prices across 240+ APMCs with 7-day forecasts. Never undersell your harvest again.</div></div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-num">4</div>
+        <div><div class="feat-title">AI recommends the best crops</div><div class="feat-desc">Soil data + weather + market prices → ranked crop list with yield estimates and ROI projections.</div></div>
+      </div>
+    </div>
+
+    <div class="rp-stats">
+      <div class="rp-stat"><div class="rp-stat-val">500+</div><div class="rp-stat-lbl">Active farms</div></div>
+      <div class="rp-stat"><div class="rp-stat-val">96%</div><div class="rp-stat-lbl">Disease accuracy</div></div>
+      <div class="rp-stat"><div class="rp-stat-val">18%</div><div class="rp-stat-lbl">Avg. yield gain</div></div>
+      <div class="rp-stat"><div class="rp-stat-val">₹32L</div><div class="rp-stat-lbl">Avg. annual savings</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let currentStep=1;
+const stepTitles=['Your account details','Your farm details','Review & confirm'];
+const stepSubs=['Create your free AgroSense account.','Tell us about your farm so we can personalise your experience.','Everything look correct? Submit to create your account.'];
+
+function goStep(n){
+  if(n>currentStep&&!validateStep(currentStep))return;
+  document.getElementById('step'+currentStep).classList.remove('active');
+  // Update circles
+  for(let i=1;i<=3;i++){
+    const c=document.getElementById('sc'+i);
+    const l=document.getElementById('sl'+i);
+    if(i<n){c.classList.add('done');c.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';l.classList.remove('active');l.classList.add('done')}
+    else if(i===n){c.classList.remove('done');c.textContent=i;c.classList.add('active');l.classList.add('active')}
+    else{c.classList.remove('done','active');c.textContent=i;l.classList.remove('active','done')}
+  }
+  for(let i=1;i<=2;i++){document.getElementById('line'+i).classList.toggle('done',i<n)}
+  currentStep=n;
+  document.getElementById('step'+n).classList.add('active');
+  document.getElementById('stepLabel').textContent=n;
+  document.getElementById('stepTitle').textContent=stepTitles[n-1];
+  document.getElementById('stepSub').innerHTML=n===1?`${stepSubs[0]} Already registered? <a href="login.html">Sign in instead</a>`:stepSubs[n-1];
+  if(n===3)buildPreview();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function validateStep(n){
+  let ok=true;
+  const setErr=(id,show)=>{
+    document.getElementById(id).classList.toggle('error',show);
+    document.getElementById(id+'-err').classList.toggle('show',show);
+    if(show)ok=false;
+  };
+  if(n===1){
+    setErr('firstName',!v('firstName'));
+    setErr('lastName',!v('lastName'));
+    const email=v('regEmail');
+    const emailOk=email&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    document.getElementById('regEmail').classList.toggle('error',!emailOk);
+    document.getElementById('email-err').classList.toggle('show',!emailOk);
+    if(!emailOk)ok=false;
+    const ph=v('phone').replace(/\s/g,'');
+    setErr('phone',!ph||!/^\d{10}$/.test(ph));
+    const pwd=v('password');
+    const pwdOk=pwd&&pwd.length>=8&&(/\d/.test(pwd)||/[^a-zA-Z0-9]/.test(pwd));
+    document.getElementById('password').classList.toggle('error',!pwdOk);
+    document.getElementById('password-err').classList.toggle('show',!pwdOk);
+    if(!pwdOk)ok=false;
+    const match=pwd===v('confirm')&&v('confirm')!=='';
+    document.getElementById('confirm').classList.toggle('error',!match);
+    document.getElementById('confirm-err').classList.toggle('show',!match);
+    if(!match)ok=false;
+  }
+  if(n===2){
+    setErr('farmName',!v('farmName'));
+    setErr('district',!v('district'));
+    const stateOk=document.getElementById('state').value!=='';
+    document.getElementById('state').classList.toggle('error',!stateOk);
+    document.getElementById('state-err').classList.toggle('show',!stateOk);
+    if(!stateOk)ok=false;
+    const sz=parseFloat(v('farmSize'));
+    setErr('farmSize',isNaN(sz)||sz<=0);
+  }
+  if(!ok)showToast('Please fix the errors above','err');
+  return ok;
+}
+
+function v(id){return document.getElementById(id).value.trim()}
+
+function buildPreview(){
+  const crops=[...document.querySelectorAll('.crop-pill.selected')].map(p=>p.textContent).join(', ')||'None selected';
+  const irr=document.querySelector('input[name="irrigation"]:checked')?.value||'—';
+  const irrMap={canal:'Canal / River',bore:'Borewell / Tubewell',rain:'Rainfed',drip:'Drip / Sprinkler'};
+  document.getElementById('rv-name').textContent=v('firstName')+' '+v('lastName');
+  document.getElementById('rv-email').textContent=v('regEmail');
+  document.getElementById('rv-phone').textContent='+91 '+v('phone');
+  document.getElementById('rv-farm').textContent=v('farmName');
+  document.getElementById('rv-loc').textContent=v('district')+', '+document.getElementById('state').value;
+  document.getElementById('rv-size').textContent=v('farmSize')+' acres';
+  document.getElementById('rv-soil').textContent=document.getElementById('soilType').value||'Not specified';
+  document.getElementById('rv-irr').textContent=irrMap[irr]||irr;
+  document.getElementById('rv-crops').textContent=crops;
+  document.getElementById('rv-nodes').textContent=v('nodeCount')||'0'+' nodes (can add later)';
+}
+
+async function handleSubmit() {
+
+    // Accept Terms
+
+    if (!document.getElementById("termsCheck").checked) {
+
+        document
+            .getElementById("terms-err")
+            .classList.add("show");
+
+        return;
+    }
+
+    document
+        .getElementById("terms-err")
+        .classList.remove("show");
+
+    const button = document.getElementById("submitBtn");
+
+    button.classList.add("loading");
+
+    //----------------------------------------------------
+    // Create JSON
+    //----------------------------------------------------
+
+    const data = {
+
+        user: {
+
+            first_name:
+                document.getElementById("firstName").value,
+
+            last_name:
+                document.getElementById("lastName").value,
+
+            email:
+                document.getElementById("regEmail").value,
+
+            phone:
+                document.getElementById("phone").value,
+
+            password:
+                document.getElementById("password").value
+        },
+
+        farm: {
+
+            farm_name:
+                document.getElementById("farmName").value,
+
+            state:
+                document.getElementById("state").value,
+
+            district:
+                document.getElementById("district").value,
+
+            farm_size:
+                parseFloat(
+                    document.getElementById("farmSize").value
+                ),
+
+            soil_type:
+                document.getElementById("soilType").value,
+
+            irrigation:
+                document.querySelector(
+                    'input[name="irrigation"]:checked'
+                ).value,
+
+            crops:
+                Array.from(
+                    document.querySelectorAll(".crop-pill.selected")
+                )
+                .map(c => c.innerText)
+                .join(","),
+
+            iot_nodes:
+                parseInt(
+                    document.getElementById("nodeCount").value
+                )
+        }
+
+    };
+
+    //----------------------------------------------------
+    // Send to FastAPI
+    //----------------------------------------------------
+
+    try {
+
+        const response = await fetch("/register", {
+
+            method: "POST",
+
+            headers: {
+
+                "Content-Type": "application/json"
+
+            },
+
+            body: JSON.stringify(data)
+
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+
+            alert(result.message);
+
+            window.location.href = "/login";
+
+        }
+
+        else {
+
+            alert(result.detail);
+
+        }
+
+    }
+
+    catch (error) {
+
+        alert("Server Error");
+
+        console.error(error);
+
+    }
+
+    button.classList.remove("loading");
+
+}
+
+function togglePwd(id,eyeId){
+  const inp=document.getElementById(id);
+  const show=inp.type==='password';
+  inp.type=show?'text':'password';
+  document.getElementById(eyeId).innerHTML=show
+    ?'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    :'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+}
+
+function checkStrength(val){
+  const w=document.getElementById('pwdStrength');
+  if(!val){w.style.display='none';return;}
+  w.style.display='block';
+  let score=0;
+  if(val.length>=8)score++;
+  if(val.length>=12)score++;
+  if(/[0-9]/.test(val)&&/[a-zA-Z]/.test(val))score++;
+  if(/[^a-zA-Z0-9]/.test(val))score++;
+  const colors=['#D32F2F','#F9A825','#4CAF50','#2E7D32'];
+  const labels=[
+    '<span style="color:#D32F2F">Weak — add numbers or symbols</span>',
+    '<span style="color:#F9A825">Fair — try a longer password</span>',
+    '<span style="color:#4CAF50">Good password</span>',
+    '<span style="color:#2E7D32">Strong password ✓</span>'
+  ];
+  for(let i=1;i<=4;i++){
+    document.getElementById('seg'+i).style.background=i<=score?colors[score-1]:'var(--bd)';
+  }
+  document.getElementById('strengthLabel').innerHTML=labels[score-1]||'';
+}
+
+function togglePill(el){el.classList.toggle('selected')}
+
+function selectRadio(grp,val){
+  document.querySelectorAll(`[id^=${grp}_]`).forEach(el=>el.classList.remove('selected'));
+  document.getElementById(grp+'_'+val).classList.add('selected');
+}
+
+function showToast(msg,type='ok'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast '+type+' show';
+  setTimeout(()=>t.className='toast',3200);
+}
+</script>
+</body>
+</html>

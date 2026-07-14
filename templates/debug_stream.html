@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stream Debug - FIXED</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { background: #0a0a0a; color: #0f0; font-family: monospace; padding: 20px; margin: 0; }
+        #logs { height: 100vh; overflow-y: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.6; }
+        .success { color: #0f0; }
+        .error { color: #f00; }
+        .info { color: #0ff; }
+        .highlight { color: #ff0; }
+        video { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; }
+    </style>
+</head>
+<body>
+    <video id="remoteVideo" autoplay playsinline></video>
+    <div id="logs"></div>
+
+    <script>
+        const logs = document.getElementById('logs');
+        const remoteVideo = document.getElementById('remoteVideo');
+        
+        function log(msg, type = '') {
+            const time = new Date().toLocaleTimeString();
+            const cls = type || '';
+            logs.innerHTML += `<span class="${cls}">[${time}] ${msg}</span>\n`;
+            logs.scrollTop = logs.scrollHeight;
+            console.log(msg);
+        }
+
+        log('🚀 Starting debug...', 'info');
+        log(`🌐 Host: ${window.location.host}`, 'info');
+
+        // ==========================================================
+        // WEBSOCKET CONNECTION
+        // ==========================================================
+        
+        const ws = new WebSocket(`ws://${window.location.host}/ws/dashboard`);
+        let pc = null;
+        let hasPaired = false;
+        let mobileId = null;
+        
+        ws.onopen = function() {
+            log('✅ WebSocket connected!', 'success');
+            ws.send(JSON.stringify({ type: 'get_mobiles' }));
+            log('📤 Requested mobile list', 'info');
+        };
+        
+        ws.onmessage = function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                log(`📩 Received: ${data.type}`, 'info');
+                
+                if (data.type === 'connected') {
+                    log(`   ✅ Client ID: ${data.client_id}`, 'success');
+                    if (data.available_mobiles && data.available_mobiles.length > 0) {
+                        log(`   📱 Available mobiles: ${JSON.stringify(data.available_mobiles)}`, 'info');
+                        mobileId = data.available_mobiles[0].id;
+                    }
+                }
+                
+                if (data.type === 'mobile_list') {
+                    log(`   📱 Mobiles: ${JSON.stringify(data.mobiles)}`, 'info');
+                    if (data.mobiles && data.mobiles.length > 0 && !hasPaired) {
+                        mobileId = data.mobiles[0].id;
+                        log(`   🔗 Auto-pairing with: ${mobileId}`, 'info');
+                        ws.send(JSON.stringify({
+                            type: 'pair',
+                            mobile_id: mobileId
+                        }));
+                    }
+                }
+                
+                if (data.type === 'paired') {
+                    log(`   🔗 Paired with: ${data.mobile_id}`, 'success');
+                    hasPaired = true;
+                    mobileId = data.mobile_id;
+                    log('   🎯 Waiting for WebRTC offer...', 'info');
+                }
+                
+                if (data.type === 'offer') {
+                    log(`   📩 OFFER RECEIVED! 🎉`, 'success');
+                    handleOffer(data.offer);
+                }
+                
+                if (data.type === 'ice_candidate') {
+                    log(`   🧊 ICE candidate received from mobile`, 'info');
+                    if (pc) {
+                        pc.addIceCandidate(new RTCIceCandidate(data.candidate))
+                            .then(() => log('   ✅ ICE candidate added', 'success'))
+                            .catch(e => log(`   ❌ ICE error: ${e.message}`, 'error'));
+                    }
+                }
+                
+            } catch(e) {
+                log(`❌ Parse error: ${e.message}`, 'error');
+            }
+        };
+        
+        ws.onclose = function() {
+            log('❌ WebSocket closed', 'error');
+        };
+
+        // ==========================================================
+        // WEBRTC HANDLER - WITH PROPER TARGET
+        // ==========================================================
+        
+        async function handleOffer(offer) {
+            try {
+                log('📤 Creating WebRTC answer...', 'info');
+                
+                pc = new RTCPeerConnection({
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' },
+                        { urls: 'stun:stun2.l.google.com:19302' }
+                    ],
+                    iceCandidatePoolSize: 10
+                });
+                
+                // --- Handle incoming video ---
+                pc.ontrack = function(event) {
+                    log('🎥 VIDEO TRACK RECEIVED!', 'success');
+                    log('✅ Stream is working!', 'success');
+                    remoteVideo.srcObject = event.streams[0];
+                    remoteVideo.style.display = 'block';
+                    log('📺 Video should be visible now!', 'success');
+                };
+                
+                // --- Send ICE candidates to mobile - WITH CORRECT TARGET ---
+                pc.onicecandidate = function(event) {
+                    if (event.candidate && ws.readyState === WebSocket.OPEN) {
+                        const candidateMsg = {
+                            type: 'ice_candidate',
+                            candidate: event.candidate,
+                            target: mobileId  // IMPORTANT: Send to the specific mobile
+                        };
+                        ws.send(JSON.stringify(candidateMsg));
+                        log(`🧊 Sent ICE candidate to mobile: ${mobileId}`, 'info');
+                    }
+                };
+                
+                // --- Monitor connection state ---
+                pc.onconnectionstatechange = function() {
+                    log(`🔗 Connection state: ${pc.connectionState}`, 'info');
+                    if (pc.connectionState === 'connected') {
+                        log('✅ WEBRTC CONNECTED! 🎉', 'success');
+                    }
+                    if (pc.connectionState === 'failed') {
+                        log('❌ WebRTC failed - check network', 'error');
+                        // Try to restart
+                        pc.restartIce();
+                    }
+                };
+                
+                // --- Monitor ICE connection ---
+                pc.oniceconnectionstatechange = function() {
+                    log(`🧊 ICE state: ${pc.iceConnectionState}`, 'info');
+                    if (pc.iceConnectionState === 'connected') {
+                        log('✅ ICE connected!', 'success');
+                    }
+                    if (pc.iceConnectionState === 'failed') {
+                        log('❌ ICE failed - restarting', 'error');
+                        pc.restartIce();
+                    }
+                };
+                
+                // --- Set remote description ---
+                await pc.setRemoteDescription(new RTCSessionDescription(offer));
+                log('✅ Remote description set', 'success');
+                
+                // --- Create answer ---
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+                log('✅ Local description set', 'success');
+                
+                // --- Send answer to mobile ---
+                ws.send(JSON.stringify({
+                    type: 'answer',
+                    answer: answer,
+                    target: mobileId  // IMPORTANT: Send to the specific mobile
+                }));
+                log(`✅ Answer sent to mobile: ${mobileId}`, 'success');
+                
+                // --- Wait for ICE gathering to complete ---
+                await new Promise((resolve) => {
+                    if (pc.iceGatheringState === 'complete') {
+                        resolve();
+                    } else {
+                        pc.onicegatheringstatechange = () => {
+                            if (pc.iceGatheringState === 'complete') {
+                                resolve();
+                            }
+                        };
+                    }
+                });
+                log('✅ ICE gathering complete', 'success');
+                log('📡 Waiting for connection...', 'info');
+                
+            } catch(e) {
+                log(`❌ WebRTC error: ${e.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+{
+    "Rice_Healthy": {
+        "medicine": "None",
+        "severity": "Healthy",
+        "prevention": "No treatment required."
+    },
+    "Rice_Leaf_Blast": {
+        "medicine": "Tricyclazole",
+        "severity": "High",
+        "prevention": "Avoid excess nitrogen and maintain proper spacing."
+    },
+    "Rice_Neck_Blast": {
+        "medicine": "Tricyclazole",
+        "severity": "High",
+        "prevention": "Use resistant varieties."
+    },
+    "Rice_Brown_Spot": {
+        "medicine": "Mancozeb",
+        "severity": "Medium",
+        "prevention": "Balanced fertilizer application."
+    },
+    "Corn_Healthy": {
+        "medicine": "None",
+        "severity": "Healthy",
+        "prevention": "No treatment required."
+    },
+    "Corn_Common_Rust": {
+        "medicine": "Propiconazole",
+        "severity": "Medium",
+        "prevention": "Grow resistant hybrids."
+    },
+    "Corn_Gray_Leaf_Spot": {
+        "medicine": "Azoxystrobin",
+        "severity": "Medium",
+        "prevention": "Crop rotation."
+    },
+    "Corn_Northern_Leaf_Blight": {
+        "medicine": "Pyraclostrobin",
+        "severity": "High",
+        "prevention": "Remove infected residues."
+    },
+    "Potato_Healthy": {
+        "medicine": "None",
+        "severity": "Healthy",
+        "prevention": "No treatment required."
+    },
+    "Potato_Early_Blight": {
+        "medicine": "Mancozeb",
+        "severity": "Medium",
+        "prevention": "Avoid overhead irrigation."
+    },
+    "Potato_Late_Blight": {
+        "medicine": "Copper Fungicide",
+        "severity": "High",
+        "prevention": "Use certified seed."
+    },
+    "Wheat_Healthy": {
+        "medicine": "None",
+        "severity": "Healthy",
+        "prevention": "No treatment required."
+    },
+    "Wheat_Brown_Rust": {
+        "medicine": "Tebuconazole",
+        "severity": "Medium",
+        "prevention": "Use resistant varieties."
+    },
+    "Wheat_Yellow_Rust": {
+        "medicine": "Propiconazole",
+        "severity": "High",
+        "prevention": "Early fungicide application."
+    },
+    "Sugarcane_Healthy": {
+        "medicine": "None",
+        "severity": "Healthy",
+        "prevention": "No treatment required."
+    },
+    "Sugarcane_Red_Rot": {
+        "medicine": "Carbendazim",
+        "severity": "High",
+        "prevention": "Use disease-free seed cane."
+    },
+    "Sugarcane_Bacterial_Blight": {
+        "medicine": "Copper Oxychloride",
+        "severity": "Medium",
+        "prevention": "Avoid waterlogging."
+    }
+}

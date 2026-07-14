@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Prices — AgroSense</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p:#2E7D32;--pd:#1B5E20;--s:#4CAF50;--sl:#C8E6C9;
+  --bg:#F5F7FA;--sf:#FFFFFF;--tx:#1C2B1E;--mu:#747970;--bd:#E0E5E0;
+  --dr:#D32F2F;--drl:#FFEBEE;--wa:#F9A825;--wal:#FFF9C4;
+  --r:12px;--rl:16px;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 4px 12px rgba(0,0,0,.05);
+  --shm:0 4px 6px rgba(0,0,0,.06),0 10px 20px rgba(0,0,0,.05);
+}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--tx);line-height:1.6;-webkit-font-smoothing:antialiased;display:flex;height:100vh;overflow:hidden}
+.sidebar{width:240px;flex-shrink:0;background:#fff;border-right:1px solid var(--bd);display:flex;flex-direction:column;height:100vh;overflow-y:auto}
+.sb-head{padding:18px 20px 14px;border-bottom:1px solid var(--bd)}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--tx);font-weight:800;font-size:15px;letter-spacing:-.3px}
+.logo-box{width:28px;height:28px;background:var(--p);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-section{padding:16px 12px 4px}
+.sb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--mu);padding:0 8px;margin-bottom:6px}
+.sb-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;text-decoration:none;color:var(--mu);font-size:13px;font-weight:500;transition:all .18s;cursor:pointer;margin-bottom:1px}
+.sb-item:hover{background:var(--bg);color:var(--tx)}
+.sb-item.active{background:rgba(46,125,50,.1);color:var(--p);font-weight:600}
+.sb-item.active svg{stroke:var(--p)}
+.sb-item svg{flex-shrink:0;opacity:.7}
+.sb-item.active svg{opacity:1}
+.sb-badge-5g{background:linear-gradient(135deg,#1565C0,#0D47A1);color:#fff;font-size:10px;font-weight:700;padding:1px 8px;border-radius:10px;margin-left:auto}
+
+.sb-footer{margin-top:auto;padding:16px 12px;border-top:1px solid var(--bd)}
+.farm-card{background:var(--bg);border-radius:10px;padding:12px;display:flex;align-items:center;gap:9px}
+.farm-icon{width:34px;height:34px;background:rgba(46,125,50,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.farm-name{font-size:12px;font-weight:600;color:var(--tx)}
+.farm-sub{font-size:10px;color:var(--mu)}
+
+/* ── LOGOUT BUTTON ── */
+.sb-logout{padding:8px 12px;margin-bottom:4px}
+.sb-logout .sb-item{color:#D32F2F}
+.sb-logout .sb-item:hover{background:#FFEBEE;color:#D32F2F}
+.sb-logout .sb-item svg{stroke:#D32F2F}
+.sb-logout .sb-item:hover svg{stroke:#D32F2F}
+
+.main{flex:1;overflow-y:auto}
+.topbar{background:#fff;border-bottom:1px solid var(--bd);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.tb-left{display:flex;flex-direction:column}
+.tb-title{font-size:16px;font-weight:700;letter-spacing:-.3px}
+.tb-sub{font-size:11px;color:var(--mu)}
+.tb-right{display:flex;align-items:center;gap:10px}
+.av-btn{width:32px;height:32px;border-radius:50%;background:var(--p);display:flex;align-items:center;justify-content:center;border:none;cursor:pointer}
+.av-btn span{color:#fff;font-size:12px;font-weight:700}
+.live-pill{display:flex;align-items:center;gap:5px;padding:6px 12px;background:rgba(46,125,50,.08);border-radius:20px;font-size:11px;font-weight:600;color:var(--p);border:1px solid rgba(46,125,50,.2)}
+.live-dot{width:6px;height:6px;background:var(--s);border-radius:50%;animation:pls 2s infinite}
+@keyframes pls{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+.refresh-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:var(--p);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
+.refresh-btn:hover{background:var(--pd);transform:translateY(-1px)}
+.refresh-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.refresh-btn .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:none}
+.refresh-btn.loading .btn-text{display:none}
+.refresh-btn.loading .spinner{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.content{padding:22px 28px;display:flex;flex-direction:column;gap:20px}
+
+.ticker-wrap{background:linear-gradient(115deg,var(--p) 0%,#388E3C 100%);border-radius:var(--rl);padding:16px 20px;overflow:hidden;position:relative}
+.ticker-wrap::before{content:'';position:absolute;top:-40px;right:20px;width:140px;height:140px;background:rgba(255,255,255,.05);border-radius:50%}
+.ticker-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,.6);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.ticker-scroll{display:flex;gap:0;overflow:hidden;position:relative}
+.ticker-inner{display:flex;gap:0;animation:ticker 28s linear infinite;white-space:nowrap}
+.ticker-inner:hover{animation-play-state:paused}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.tick-item{display:inline-flex;align-items:center;gap:10px;padding:0 24px;border-right:1px solid rgba(255,255,255,.15)}
+.tick-crop{font-size:13px;font-weight:700;color:#fff}
+.tick-price{font-size:13px;font-weight:800;color:#fff}
+.tick-change{font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px}
+.tick-up{background:rgba(255,255,255,.15);color:#A5D6A7}
+.tick-dn{background:rgba(211,47,47,.25);color:#FF8A80}
+
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.stat-card{background:#fff;border-radius:var(--r);border:1px solid var(--bd);box-shadow:var(--sh);padding:14px 16px}
+.sc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--mu);margin-bottom:6px}
+.sc-val{font-size:22px;font-weight:800;letter-spacing:-.5px}
+.sc-sub{font-size:11px;color:var(--mu);margin-top:3px}
+
+.main-grid{display:grid;grid-template-columns:1fr 1.4fr;gap:18px;align-items:start}
+
+.price-table-wrap{background:#fff;border-radius:var(--rl);border:1px solid var(--bd);box-shadow:var(--sh);overflow:hidden}
+.pt-head{padding:14px 18px;border-bottom:1px solid var(--bg);display:flex;align-items:center;justify-content:space-between}
+.pt-title{font-size:13px;font-weight:700}
+.search-box{display:flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:6px 10px}
+.search-box input{background:none;border:none;outline:none;font-size:12px;font-family:inherit;color:var(--tx);width:120px}
+.search-box svg{flex-shrink:0;color:var(--mu)}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--mu);padding:10px 16px;text-align:left;background:var(--bg);border-bottom:1px solid var(--bd)}
+tbody tr{border-bottom:1px solid var(--bg);transition:background .15s;cursor:pointer}
+tbody tr:hover{background:rgba(46,125,50,.03)}
+tbody tr.selected{background:rgba(46,125,50,.06);border-left:3px solid var(--p)}
+td{padding:11px 16px;font-size:12px}
+.crop-cell{display:flex;align-items:center;gap:9px}
+.crop-emoji-sm{font-size:18px}
+.crop-name-sm{font-weight:600}
+.crop-mandi{font-size:10px;color:var(--mu)}
+.price-cell{font-weight:700;font-size:13px}
+.empty-row td{text-align:center;padding:28px 16px;color:var(--mu);font-size:12px}
+
+.source-badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:10px;font-weight:700}
+.source-govt{background:rgba(46,125,50,.12);color:#2E7D32}
+.source-gemini{background:rgba(156,39,176,.12);color:#6A1B9A}
+.source-mock{background:rgba(255,152,0,.12);color:#E65100}
+
+.detail-card{background:#fff;border-radius:var(--rl);border:1px solid var(--bd);box-shadow:var(--sh);overflow:hidden}
+.dc-head{padding:16px 20px;border-bottom:1px solid var(--bg);display:flex;align-items:center;justify-content:space-between}
+.dc-crop{display:flex;align-items:center;gap:10px}
+.dc-emoji{font-size:28px}
+.dc-name{font-size:16px;font-weight:800;letter-spacing:-.3px}
+.dc-mandi{font-size:11px;color:var(--mu);margin-top:2px}
+.dc-price{text-align:right}
+.dc-pval{font-size:24px;font-weight:800;letter-spacing:-1px;color:var(--p)}
+.dc-change{font-size:12px;font-weight:700;margin-top:2px}
+.dc-body{padding:16px 20px;display:flex;flex-direction:column;gap:14px}
+.chart-wrap{height:160px;position:relative}
+.price-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pm-item{background:var(--bg);border-radius:9px;padding:10px 12px;text-align:center}
+.pm-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--mu);margin-bottom:3px}
+.pm-val{font-size:14px;font-weight:700}
+.trend-note{background:var(--bg);border-radius:9px;padding:10px 12px;font-size:11px;color:var(--mu);display:flex;align-items:center;gap:8px}
+.trend-note b{color:var(--tx)}
+
+.trending-card{background:#fff;border-radius:var(--rl);border:1px solid var(--bd);box-shadow:var(--sh);padding:18px 20px}
+.tr-title{font-size:13px;font-weight:700;margin-bottom:14px}
+.tr-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tr-item{padding:12px 14px;border-radius:10px;border:1.5px solid;transition:all .2s;cursor:pointer}
+.tr-item.bull{border-color:rgba(46,125,50,.25);background:rgba(46,125,50,.04)}
+.tr-item.bear{border-color:rgba(211,47,47,.2);background:rgba(211,47,47,.03)}
+.tr-item:hover{transform:translateY(-2px)}
+.tr-crop{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;margin-bottom:4px}
+.tr-pct{font-size:16px;font-weight:800}
+.tr-reason{font-size:10px;color:var(--mu);line-height:1.5;margin-top:3px}
+
+@media(max-width:1024px){.content{padding:16px}.main-grid{grid-template-columns:1fr}.stat-row{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.sidebar{width:60px}.sidebar .sb-label,.sidebar .sb-item span,.sidebar .sb-footer .farm-name,.sidebar .sb-footer .farm-sub{display:none}.sidebar .sb-item{padding:12px;justify-content:center}.sidebar .sb-item svg{margin:0}.stat-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-head">
+    <a href="/home" class="logo">
+      <div class="logo-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
+      AgroSense
+    </a>
+  </div>
+
+  <div class="sb-section">
+    <div class="sb-label">Overview</div>
+    <a href="/dashboard" class="sb-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</a>
+    <a href="/analytics" class="sb-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>Plant Analysis<span style="margin-left:auto;background:var(--p);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px">AI</span></a>
+  </div>
+
+  <div class="sb-section">
+    <div class="sb-label">Intelligence</div>
+    <a href="/recommendation" class="sb-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Crop Advice</a>
+    <a href="/livestream" class="sb-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="4" width="20" height="16" rx="2"/>
+        <circle cx="12" cy="12" r="3"/>
+        <line x1="2" y1="8" x2="6" y2="8"/>
+        <line x1="2" y1="12" x2="4" y2="12"/>
+        <line x1="2" y1="16" x2="6" y2="16"/>
+      </svg>
+      5G Live Stream
+      <span class="sb-badge-5g">5G</span>
+    </a>
+    <a href="/architecture" class="sb-item active"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Market Prices</a>
+  </div>
+
+  <!-- LOGOUT BUTTON - MOVED TO BOTTOM ABOVE FARM INFO -->
+  <div class="sb-logout">
+    <a href="#" class="sb-item" onclick="logout()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+      Logout
+    </a>
+  </div>
+
+  <div class="sb-footer">
+    <div class="farm-card">
+      <div class="farm-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+      <div><div class="farm-name" id="farmName">Loading...</div><div class="farm-sub" id="farmDetails">Loading...</div></div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="tb-title">Live Market Prices</div>
+      <div class="tb-sub" id="ts">AGMARKNET Mandi Data · Updated <span id="upd">just now</span></div>
+    </div>
+    <div class="tb-right">
+      <button class="refresh-btn" id="refreshBtn" onclick="refreshMarketData()">
+        <span class="btn-text">🔄 Refresh</span>
+        <div class="spinner"></div>
+      </button>
+      <div class="live-pill"><div class="live-dot"></div><span id="liveCount">Live</span></div>
+      <div class="av-btn"><span id="userInitial">U</span></div>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- TICKER -->
+    <div class="ticker-wrap">
+      <div class="ticker-label"><div class="live-dot"></div> Live Mandi Price Ticker</div>
+      <div class="ticker-scroll">
+        <div class="ticker-inner" id="tickerInner"></div>
+        <div class="ticker-inner" id="tickerInner2" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <!-- STAT ROW -->
+    <div class="stat-row" id="statRow">
+      <div class="stat-card"><div class="sc-lbl">Highest Today</div><div class="sc-val" id="stat-highest-name" style="color:var(--p)">—</div><div class="sc-sub" id="stat-highest-sub">—</div></div>
+      <div class="stat-card"><div class="sc-lbl">Biggest Gainer</div><div class="sc-val" id="stat-gainer-pct" style="color:var(--p)">—</div><div class="sc-sub" id="stat-gainer-sub">—</div></div>
+      <div class="stat-card"><div class="sc-lbl">Biggest Faller</div><div class="sc-val" id="stat-faller-pct" style="color:var(--dr)">—</div><div class="sc-sub" id="stat-faller-sub">—</div></div>
+      <div class="stat-card"><div class="sc-lbl">Data Source</div><div class="sc-val" id="stat-source" style="font-size:14px;color:var(--mu)">—</div><div class="sc-sub" id="stat-mandis-sub">Live from AGMARKNET</div></div>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="main-grid">
+
+      <!-- PRICE TABLE -->
+      <div class="price-table-wrap">
+        <div class="pt-head">
+          <div class="pt-title">All Crops</div>
+          <div class="search-box">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input placeholder="Search crop..." id="searchInput" oninput="filterTable()">
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Crop</th><th>Price (₹/q)</th><th>Source</th></tr></thead>
+          <tbody id="priceTable"><tr class="empty-row"><td colspan="3">Loading live mandi data…</td></tr></tbody>
+        </table>
+      </div>
+
+      <!-- DETAIL CARD -->
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div class="detail-card">
+          <div class="dc-head">
+            <div class="dc-crop">
+              <div class="dc-emoji" id="dc-emoji">🌾</div>
+              <div><div class="dc-name" id="dc-name">—</div><div class="dc-mandi" id="dc-mandi">—</div></div>
+            </div>
+            <div class="dc-price">
+              <div class="dc-pval" id="dc-price">—</div>
+              <div class="dc-change up" id="dc-change">—</div>
+              <div id="dc-source-badge" style="margin-top:4px"></div>
+            </div>
+          </div>
+          <div class="dc-body">
+            <div class="chart-wrap"><canvas id="detailChart"></canvas></div>
+            <div class="price-meta">
+              <div class="pm-item"><div class="pm-label">7-Day Low</div><div class="pm-val" id="dc-low">—</div></div>
+              <div class="pm-item"><div class="pm-label">7-Day High</div><div class="pm-val" id="dc-high">—</div></div>
+              <div class="pm-item"><div class="pm-label">Markets</div><div class="pm-val" id="dc-vol">—</div></div>
+            </div>
+            <div class="trend-note" id="trend-note">Select a crop to see its weekly trend.</div>
+            <button onclick="exportCsv()" style="width:100%;padding:9px;background:var(--bg);border:1.5px solid var(--bd);border-radius:9px;font-size:12px;font-weight:600;color:var(--tx);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export Price History
+            </button>
+          </div>
+        </div>
+
+        <!-- TRENDING -->
+        <div class="trending-card">
+          <div class="tr-title">📊 Price Trend This Week</div>
+          <div class="tr-grid" id="trendingGrid">
+            <div class="empty-row" style="grid-column:1/-1">Loading trend data…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ==========================================================
+// LOGIN CHECK
+// ==========================================================
+
+const user = JSON.parse(localStorage.getItem("user"));
+const farm = JSON.parse(localStorage.getItem("farm"));
+
+if (!user || !farm) {
+    window.location.href = "/login";
+}
+
+// Safe set text content
+function safeSetText(id, value) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.textContent = value;
+    }
+}
+
+safeSetText("userInitial", user.first_name.charAt(0).toUpperCase());
+safeSetText("farmName", farm.farm_name || "My Farm");
+safeSetText("farmDetails", `${farm.district || ""}, ${farm.state || ""} · ${farm.farm_size || 0} Acres`);
+
+const API_BASE = '';
+let marketData = [];
+let selectedCrop = null;
+let detailChart;
+let isLoading = false;
+
+// ==========================================================
+// SOURCE LABELS
+// ==========================================================
+
+const SOURCE_LABELS = {
+    'government_api': { label: '📊 Government API', class: 'source-govt' },
+    'gemini_ai': { label: '🤖 Gemini AI', class: 'source-gemini' },
+    'mock_data': { label: '📋 Mock Data', class: 'source-mock' },
+    'empty': { label: '❌ No Data', class: '' }
+};
+
+function getSourceBadge(source) {
+    const info = SOURCE_LABELS[source] || SOURCE_LABELS['empty'];
+    return `<span class="source-badge ${info.class}">${info.label}</span>`;
+}
+
+// ==========================================================
+// EMOJI MAP
+// ==========================================================
+
+const EMOJI_MAP = {
+  'Wheat':'🌾', 'Paddy':'🍚', 'Rice':'🍚', 'Mustard':'🌻', 'Maize':'🌽', 
+  'Soybean':'🌱', 'Cotton':'🌿', 'Onion':'🧅', 'Tomato':'🍅', 
+  'Sugarcane':'🎋', 'Gram':'🫘', 'Potato':'🥔', 'Chilli':'🌶️', 
+  'Turmeric':'🟡', 'Groundnut':'🥜', 'Banana':'🍌', 'Mango':'🥭',
+  'Millet':'🌾'
+};
+function emojiFor(crop){
+  return EMOJI_MAP[crop] || '🌾';
+}
+
+// ==========================================================
+// FETCH HELPERS
+// ==========================================================
+
+function computeChange(rec){
+  if (!rec.minimum_price || rec.minimum_price === 0) return 0;
+  return +(((rec.modal_price - rec.minimum_price) / rec.minimum_price) * 100).toFixed(1);
+}
+
+function normalize(rec) {
+  const source = rec.source || 'government_api';
+  const cropName = rec.commodity || rec.ai_crop || rec.crop || 'Unknown';
+  return {
+    emoji: emojiFor(cropName),
+    crop: cropName,
+    variety: rec.variety || '',
+    price: Math.round(rec.modal_price || 0),
+    min: rec.minimum_price || 0,
+    max: rec.maximum_price || 0,
+    change: computeChange(rec),
+    mandi: rec.market || '',
+    district: rec.district || '',
+    state: rec.state || '',
+    date: rec.arrival_date || '',
+    source: source,
+    source_label: rec.source_label || getSourceBadge(source)
+  };
+}
+
+// ==========================================================
+// REFRESH FUNCTION
+// ==========================================================
+
+async function refreshMarketData() {
+    if (isLoading) return;
+    
+    const btn = document.getElementById('refreshBtn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+    isLoading = true;
+    
+    try {
+        await fetch(`${API_BASE}/api/market/update-cache`, { method: 'POST' });
+        await loadMarketData(true);
+        updateTs();
+    } catch(e) {
+        console.error('Refresh error:', e);
+        alert('Failed to refresh market data. Please try again.');
+    } finally {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+        isLoading = false;
+    }
+}
+
+// ==========================================================
+// BUILD UI
+// ==========================================================
+
+function buildTicker(){
+  if (marketData.length === 0) {
+    document.getElementById('tickerInner').innerHTML = '<div class="tick-item"><span class="tick-crop">No data available</span></div>';
+    document.getElementById('tickerInner2').innerHTML = '<div class="tick-item"><span class="tick-crop">No data available</span></div>';
+    return;
+  }
+  const items = marketData.slice(0, 20).map(d => {
+    const up = d.change >= 0;
+    return `<div class="tick-item">
+      <span>${d.emoji}</span>
+      <span class="tick-crop">${d.crop}</span>
+      <span class="tick-price">₹${d.price.toLocaleString('en-IN')}/q</span>
+      <span class="tick-change ${up?'tick-up':'tick-dn'}">${up?'▲+':'▼'}${Math.abs(d.change)}%</span>
+    </div>`;
+  }).join('');
+  document.getElementById('tickerInner').innerHTML = items;
+  document.getElementById('tickerInner2').innerHTML = items;
+}
+
+function buildTable(data){
+  if (data.length === 0) {
+    document.getElementById('priceTable').innerHTML = '<tr class="empty-row"><td colspan="3">No live mandi data available right now.</td></tr>';
+    return;
+  }
+  document.getElementById('priceTable').innerHTML = data.map((d, idx) => {
+    const up = d.change >= 0;
+    const selected = selectedCrop && d.crop === selectedCrop.crop && d.mandi === selectedCrop.mandi;
+    const sourceBadge = getSourceBadge(d.source);
+    return `<tr onclick="selectCrop(${idx})" class="${selected ? 'selected' : ''}">
+      <td><div class="crop-cell"><span class="crop-emoji-sm">${d.emoji}</span><div><div class="crop-name-sm">${d.crop}</div><div class="crop-mandi">${d.mandi || ''}</div></div></div></td>
+      <td class="price-cell">₹${d.price.toLocaleString('en-IN')}</td>
+      <td>${sourceBadge}</td>
+    </tr>`;
+  }).join('');
+}
+
+function filterTable(){
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = marketData.filter(d => d.crop.toLowerCase().includes(q) || (d.mandi && d.mandi.toLowerCase().includes(q)));
+  buildTable(filtered);
+}
+
+function buildStats(){
+  if (marketData.length === 0) return;
+
+  const sortedByPrice = [...marketData].sort((a,b) => b.price - a.price);
+  const highest = sortedByPrice[0];
+  document.getElementById('stat-highest-name').textContent = highest.crop;
+  document.getElementById('stat-highest-sub').textContent = `₹${highest.price.toLocaleString('en-IN')}/q · ${highest.mandi || '—'}`;
+
+  const sortedByChange = [...marketData].sort((a,b) => b.change - a.change);
+  const gainer = sortedByChange[0];
+  document.getElementById('stat-gainer-pct').textContent = `+${Math.abs(gainer.change)}%`;
+  document.getElementById('stat-gainer-sub').textContent = `${gainer.crop} · ${gainer.mandi || '—'}`;
+
+  const faller = sortedByChange[sortedByChange.length - 1];
+  document.getElementById('stat-faller-pct').textContent = `${faller.change < 0 ? '−' : ''}${Math.abs(faller.change)}%`;
+  document.getElementById('stat-faller-sub').textContent = `${faller.crop} · ${faller.mandi || '—'}`;
+
+  const sources = [...new Set(marketData.map(d => d.source))];
+  const sourceLabels = sources.map(s => getSourceBadge(s)).join(' ');
+  document.getElementById('stat-source').innerHTML = sourceLabels;
+}
+
+function buildTrending(){
+  if (marketData.length === 0) {
+    document.getElementById('trendingGrid').innerHTML = '<div class="empty-row" style="grid-column:1/-1">No trend data available.</div>';
+    return;
+  }
+  const sorted = [...marketData].sort((a,b) => b.change - a.change);
+  const gainers = sorted.slice(0, 2);
+  const fallers = sorted.slice(-2).reverse();
+  const picks = [...gainers, ...fallers];
+
+  document.getElementById('trendingGrid').innerHTML = picks.map(d => {
+    const bull = d.change >= 0;
+    const sourceBadge = getSourceBadge(d.source);
+    return `<div class="tr-item ${bull?'bull':'bear'}" onclick="selectCropByName('${d.crop.replace(/'/g,"\\'")}')">
+      <div class="tr-crop"><span>${d.emoji}</span>${d.crop}</div>
+      <div class="tr-pct" style="color:${bull?'var(--p)':'var(--dr)'}">${bull?'+':'−'}${Math.abs(d.change)}%</div>
+      <div class="tr-reason">₹${d.price.toLocaleString('en-IN')}/q at ${d.mandi || 'reporting mandi'} ${sourceBadge}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectCropByName(name){
+  const idx = marketData.findIndex(d => d.crop === name);
+  if (idx >= 0) selectCrop(idx);
+}
+
+// ==========================================================
+// DETAIL + CHART
+// ==========================================================
+
+async function selectCrop(idx){
+  if (idx < 0 || idx >= marketData.length) return;
+  selectedCrop = marketData[idx];
+  if (!selectedCrop) return;
+
+  document.getElementById('dc-emoji').textContent = selectedCrop.emoji;
+  document.getElementById('dc-name').textContent = selectedCrop.crop;
+  document.getElementById('dc-mandi').textContent = `${selectedCrop.mandi || '—'} · ${selectedCrop.district || selectedCrop.state || ''}`;
+  document.getElementById('dc-price').textContent = '₹' + selectedCrop.price.toLocaleString('en-IN');
+  const up = selectedCrop.change >= 0;
+  document.getElementById('dc-change').textContent = (up ? '▲ +' : '▼ ') + Math.abs(selectedCrop.change) + '% vs day low';
+  document.getElementById('dc-change').className = 'dc-change ' + (up ? 'up' : 'dn');
+  
+  document.getElementById('dc-source-badge').innerHTML = getSourceBadge(selectedCrop.source);
+
+  const searchQ = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = searchQ ? marketData.filter(d => d.crop.toLowerCase().includes(searchQ) || (d.mandi && d.mandi.toLowerCase().includes(searchQ))) : marketData;
+  buildTable(filtered);
+
+  const history = await fetchCropHistory(selectedCrop.crop);
+  buildChart(history);
+}
+
+async function fetchCropHistory(commodity){
+  try {
+    const res = await fetch(`${API_BASE}/api/market/search?commodity=${encodeURIComponent(commodity)}`);
+    if (!res.ok) throw new Error(`Request failed (${res.status})`);
+    const data = await res.json();
+    return data.records || [];
+  } catch(err) {
+    console.error('Failed to load crop history:', err);
+    return [];
+  }
+}
+
+function buildChart(history){
+  const records = [...history]
+    .filter(r => r.arrival_date)
+    .sort((a,b) => new Date(a.arrival_date) - new Date(b.arrival_date))
+    .slice(-7);
+
+  const labels = records.length ? records.map(r => r.arrival_date) : [selectedCrop.date || 'Today'];
+  const prices = records.length ? records.map(r => Math.round(r.modal_price)) : [selectedCrop.price];
+
+  const allModal = (records.length ? records : [selectedCrop]).map(r => r.modal_price ?? r.price);
+  const low = Math.min(...allModal);
+  const high = Math.max(...allModal);
+
+  document.getElementById('dc-low').textContent = '₹' + Math.round(low).toLocaleString('en-IN');
+  document.getElementById('dc-high').textContent = '₹' + Math.round(high).toLocaleString('en-IN');
+  document.getElementById('dc-vol').textContent = (records.length || 1) + ' mandis';
+
+  const trendPct = prices.length > 1 ? (((prices[prices.length-1] - prices[0]) / prices[0]) * 100).toFixed(1) : selectedCrop.change;
+  const trendUp = trendPct >= 0;
+  document.getElementById('trend-note').innerHTML = 
+    `<span>${trendUp?'📈':'📉'}</span> <span><b>${selectedCrop.crop}</b> is ${trendUp?'up':'down'} <b style="color:${trendUp?'var(--p)':'var(--dr)'}">${Math.abs(trendPct)}%</b> across the mandi reports available this week. ${getSourceBadge(selectedCrop.source)}</span>`;
+
+  if (detailChart) detailChart.destroy();
+  const color = trendUp ? '#2E7D32' : '#D32F2F';
+  detailChart = new Chart(document.getElementById('detailChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Modal Price (₹/q)',
+        data: prices,
+        borderColor: color,
+        backgroundColor: color + '18',
+        tension: .4, fill: true, pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: color,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 }, color: '#747970' } },
+        y: { grid: { color: '#E0E5E0', lineWidth: 1 }, ticks: { font: { family: 'Inter', size: 10 }, color: '#747970', callback: v => '₹' + v.toLocaleString('en-IN') } }
+      }
+    }
+  });
+}
+
+// ==========================================================
+// EXPORT
+// ==========================================================
+
+function exportCsv(){
+  if (!selectedCrop) { alert('Please select a crop first.'); return; }
+  const rows = [['Crop','Mandi','District','State','Price','Change%','Source'],
+    ...marketData.filter(d => d.crop === selectedCrop.crop).map(d => [d.crop, d.mandi, d.district, d.state, d.price, d.change, d.source])];
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${selectedCrop.crop}_price_history.csv`;
+  a.click();
+}
+
+// ==========================================================
+// UPDATE TIMESTAMP
+// ==========================================================
+
+function updateTs(){
+  const now = new Date();
+  document.getElementById('upd').textContent = now.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+}
+
+// ==========================================================
+// INIT / REFRESH
+// ==========================================================
+
+async function loadMarketData(isRefresh){
+  try {
+    const response = await fetch(`${API_BASE}/api/market/latest`);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const data = await response.json();
+    
+    console.log('Market API Response:', data);
+    
+    let records = data.records || data || [];
+    if (!Array.isArray(records)) {
+      records = [];
+    }
+    
+    console.log('Records found:', records.length);
+    
+    marketData = records.map(normalize);
+    document.getElementById('liveCount').textContent = marketData.length ? `${marketData.length} Crops Live` : 'Live';
+
+    buildTicker();
+    buildStats();
+    const searchQ = document.getElementById('searchInput').value.toLowerCase();
+    const filtered = searchQ ? marketData.filter(d => d.crop.toLowerCase().includes(searchQ) || (d.mandi && d.mandi.toLowerCase().includes(searchQ))) : marketData;
+    buildTable(filtered);
+    buildTrending();
+
+    if (marketData.length) {
+      if (!isRefresh || !selectedCrop) {
+        await selectCrop(0);
+      } else {
+        const stillThere = marketData.findIndex(d => d.crop === selectedCrop.crop && d.mandi === selectedCrop.mandi);
+        await selectCrop(stillThere >= 0 ? stillThere : 0);
+      }
+    }
+    updateTs();
+  } catch(e) {
+    console.error('Market data load error:', e);
+    document.getElementById('priceTable').innerHTML = `<tr class="empty-row"><td colspan="3">Error loading data: ${e.message}</td></tr>`;
+  }
+}
+
+// ==========================================================
+// LOGOUT
+// ==========================================================
+
+function logout() {
+  localStorage.clear();
+  window.location.href = '/login';
+}
+
+// ==========================================================
+// INIT
+// ==========================================================
+
+loadMarketData(false);
+setInterval(() => loadMarketData(true), 60000);
+
+console.log('Market page loaded. API_BASE:', API_BASE);
+console.log('Farm data:', farm);
+</script>
+</body>
+</html>

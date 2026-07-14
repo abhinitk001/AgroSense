@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — AgroSense</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p:#2E7D32;--pd:#1B5E20;--ph:#245F27;
+  --s:#4CAF50;--sl:#C8E6C9;--sa:#81C784;
+  --bg:#F5F7FA;--sf:#FFFFFF;
+  --tx:#1C2B1E;--mu:#747970;--bd:#E0E5E0;
+  --dr:#D32F2F;--drl:#FFEBEE;--wa:#F9A825;--wal:#FFF9C4;
+  --bl:#1565C0;--bll:#E3F2FD;
+  --r:12px;--rl:16px;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 4px 12px rgba(0,0,0,.05);
+  --shm:0 4px 6px rgba(0,0,0,.06),0 10px 20px rgba(0,0,0,.05);
+}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--tx);line-height:1.6;-webkit-font-smoothing:antialiased;display:flex;height:100vh;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{width:240px;flex-shrink:0;background:#fff;border-right:1px solid var(--bd);display:flex;flex-direction:column;height:100vh;overflow-y:auto}
+.sb-head{padding:18px 20px 14px;border-bottom:1px solid var(--bd)}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--tx);font-weight:800;font-size:15px;letter-spacing:-.3px}
+.logo-box{width:28px;height:28px;background:var(--p);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-section{padding:16px 12px 4px}
+.sb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--mu);padding:0 8px;margin-bottom:6px}
+.sb-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;text-decoration:none;color:var(--mu);font-size:13px;font-weight:500;transition:all .18s;cursor:pointer;margin-bottom:1px}
+.sb-item:hover{background:var(--bg);color:var(--tx)}
+.sb-item.active{background:rgba(46,125,50,.1);color:var(--p);font-weight:600}
+.sb-item.active svg{stroke:var(--p)}
+.sb-item svg{flex-shrink:0;opacity:.7}
+.sb-item.active svg{opacity:1}
+.sb-badge{margin-left:auto;background:var(--p);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px}
+.sb-badge-5g{background:linear-gradient(135deg,#1565C0,#0D47A1);color:#fff;font-size:10px;font-weight:700;padding:1px 8px;border-radius:10px;margin-left:auto}
+
+.sb-footer{margin-top:auto;padding:16px 12px;border-top:1px solid var(--bd)}
+.farm-card{background:var(--bg);border-radius:10px;padding:12px;display:flex;align-items:center;gap:9px}
+.farm-icon{width:34px;height:34px;background:rgba(46,125,50,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.farm-name{font-size:12px;font-weight:600;color:var(--tx)}
+.farm-sub{font-size:10px;color:var(--mu)}
+
+/* ── LOGOUT BUTTON ── */
+.sb-logout{padding:8px 12px;margin-bottom:4px}
+.sb-logout .sb-item{color:#D32F2F}
+.sb-logout .sb-item:hover{background:#FFEBEE;color:#D32F2F}
+.sb-logout .sb-item svg{stroke:#D32F2F}
+.sb-logout .sb-item:hover svg{stroke:#D32F2F}
+
+/* ── MAIN ── */
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+
+/* ── TOPBAR ── */
+.topbar{background:#fff;border-bottom:1px solid var(--bd);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:10}
+.tb-left{display:flex;flex-direction:column}
+.tb-title{font-size:16px;font-weight:700;letter-spacing:-.3px}
+.tb-sub{font-size:11px;color:var(--mu)}
+.tb-right{display:flex;align-items:center;gap:10px}
+.refresh-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1px solid var(--bd);background:#fff;font-size:12px;font-weight:600;color:var(--tx);cursor:pointer;font-family:inherit;transition:all .2s}
+.refresh-btn:hover{border-color:var(--p);color:var(--p)}
+.refresh-btn.spinning svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.status-pill{display:flex;align-items:center;gap:5px;padding:6px 12px;background:rgba(46,125,50,.08);border-radius:20px;font-size:11px;font-weight:600;color:var(--p);border:1px solid rgba(46,125,50,.2)}
+.live-dot{width:6px;height:6px;background:var(--s);border-radius:50%;animation:pls 2s infinite}
+@keyframes pls{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+.av-btn{width:32px;height:32px;border-radius:50%;background:var(--p);display:flex;align-items:center;justify-content:center;cursor:pointer;border:none}
+.av-btn span{color:#fff;font-size:12px;font-weight:700}
+
+/* ── CONTENT ── */
+.content{padding:22px 28px;display:flex;flex-direction:column;gap:20px}
+
+/* ── WEATHER STRIP ── */
+.weather-strip{background:linear-gradient(125deg,var(--p) 0%,#388E3C 100%);border-radius:var(--rl);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;color:#fff;position:relative;overflow:hidden}
+.weather-strip::before{content:'';position:absolute;top:-30px;right:60px;width:160px;height:160px;background:rgba(255,255,255,.05);border-radius:50%}
+.ws-left{display:flex;align-items:center;gap:18px;z-index:1}
+.ws-temp{font-size:40px;font-weight:800;letter-spacing:-2px;line-height:1}
+.ws-info .ws-cond{font-size:15px;font-weight:600;opacity:.95}
+.ws-info .ws-loc{font-size:11px;opacity:.6;margin-top:2px}
+.ws-mid{display:flex;gap:20px;z-index:1}
+.witem{display:flex;flex-direction:column;align-items:center;gap:3px}
+.wlbl{font-size:10px;opacity:.55;font-weight:500}
+.wval{font-size:13px;font-weight:700}
+.ws-right{display:flex;gap:12px;z-index:1}
+.fday{text-align:center;background:rgba(255,255,255,.1);border-radius:8px;padding:8px 12px;min-width:54px}
+.fd-day{font-size:10px;opacity:.6;margin-bottom:4px;font-weight:500}
+.fd-icon{font-size:16px;margin-bottom:3px}
+.fd-hi{font-size:13px;font-weight:700}
+.fd-lo{font-size:10px;opacity:.55}
+
+/* ── SENSOR GRID ── */
+.sensor-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.sensor-card{background:#fff;border-radius:var(--r);padding:16px 18px;border:1px solid var(--bd);box-shadow:var(--sh);position:relative;overflow:hidden;transition:all .2s}
+.sensor-card:hover{box-shadow:var(--shm);transform:translateY(-2px)}
+.sensor-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--bar-color,var(--s))}
+.sc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.sc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mu)}
+.sc-badge{font-size:9px;font-weight:700;padding:3px 8px;border-radius:8px}
+.badge-ok{background:rgba(46,125,50,.1);color:var(--p)}
+.badge-warn{background:var(--wal);color:#E65100}
+.badge-low{background:var(--drl);color:var(--dr)}
+.sc-val{font-size:30px;font-weight:800;letter-spacing:-1.5px;line-height:1;margin-bottom:3px}
+.sc-unit{font-size:12px;color:var(--mu);font-weight:500}
+.sc-bar-wrap{margin-top:10px}
+.sc-bar-track{height:4px;background:var(--bd);border-radius:4px;overflow:hidden}
+.sc-bar-fill{height:100%;border-radius:4px;background:var(--bar-color,var(--s));transition:width .6s}
+.sc-range{display:flex;justify-content:space-between;margin-top:4px;font-size:9px;color:var(--mu)}
+
+/* ── MAIN GRID ── */
+.main-grid{display:grid;grid-template-columns:1.55fr 1fr;gap:18px}
+.card{background:#fff;border-radius:var(--rl);padding:18px 20px;border:1px solid var(--bd);box-shadow:var(--sh)}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.card-title{font-size:13px;font-weight:700;letter-spacing:-.2px}
+.card-sub{font-size:11px;color:var(--mu)}
+.view-all{font-size:11px;font-weight:600;color:var(--p);text-decoration:none;cursor:pointer;background:none;border:none;font-family:inherit}
+.view-all:hover{text-decoration:underline}
+
+/* ── CHART CANVAS ── */
+.chart-wrap{position:relative;height:180px;width:100%}
+
+/* ── ALERTS ── */
+.alert-list{display:flex;flex-direction:column;gap:10px}
+.alert-item{display:flex;align-items:flex-start;gap:10px;padding:11px 13px;border-radius:10px;border:1px solid}
+.alert-item.warn{background:var(--wal);border-color:#FFE082;}
+.alert-item.danger{background:var(--drl);border-color:#FFCDD2}
+.alert-item.info{background:var(--bll);border-color:#BBDEFB}
+.alert-item.ok{background:rgba(46,125,50,.07);border-color:rgba(46,125,50,.2)}
+.al-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.alert-item.warn .al-icon{background:#FFE082}
+.alert-item.danger .al-icon{background:#FFCDD2}
+.alert-item.info .al-icon{background:#BBDEFB}
+.alert-item.ok .al-icon{background:rgba(46,125,50,.1)}
+.al-t{font-size:12px;font-weight:600;margin-bottom:2px}
+.al-d{font-size:11px;color:var(--mu);line-height:1.5}
+.al-time{font-size:10px;color:var(--mu);margin-top:2px;font-weight:500}
+
+/* ── BOTTOM GRID ── */
+.bottom-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}
+
+/* ── NPK TABLE ── */
+.npk-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bg)}
+.npk-row:last-child{border-bottom:none}
+.npk-name{font-size:12px;font-weight:600;width:95px;flex-shrink:0}
+.npk-track{flex:1;height:6px;background:var(--bg);border-radius:4px;overflow:hidden}
+.npk-fill{height:100%;border-radius:4px}
+.npk-val{font-size:12px;font-weight:700;width:46px;text-align:right;flex-shrink:0}
+.npk-status{font-size:10px;font-weight:700;width:46px;text-align:right;flex-shrink:0}
+
+/* ── NODES ── */
+.node-list{display:flex;flex-direction:column;gap:8px}
+.node-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:9px}
+.node-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.node-name{font-size:12px;font-weight:600;flex:1}
+.node-sub{font-size:10px;color:var(--mu);margin-top:1px}
+.node-sig{font-size:11px;font-weight:600}
+
+/* ── QUICK ACTIONS ── */
+.quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.qa-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 10px;background:var(--bg);border:1.5px solid var(--bd);border-radius:10px;text-decoration:none;font-size:11px;font-weight:600;color:var(--tx);transition:all .2s;text-align:center;cursor:pointer}
+.qa-btn:hover{border-color:var(--p);color:var(--p);background:rgba(46,125,50,.04)}
+.qa-icon{width:30px;height:30px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh)}
+
+/* ── LOADING SKELETON ── */
+.skeleton{background:linear-gradient(90deg,var(--bd) 25%,#f0f0f0 50%,var(--bd) 75%);background-size:200% 100%;animation:skel 1.4s infinite;border-radius:6px}
+@keyframes skel{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-head">
+    <a href="/home" class="logo">
+      <div class="logo-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
+      AgroSense
+    </a>
+  </div>
+
+  <div class="sb-section">
+    <div class="sb-label">Overview</div>
+    <a href="/dashboard" class="sb-item active">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </a>
+    <a href="/analytics" class="sb-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+      Plant Analysis
+      <span class="sb-badge">AI</span>
+    </a>
+  </div>
+
+  <div class="sb-section">
+    <div class="sb-label">Intelligence</div>
+    <a href="/recommendation" class="sb-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Crop Advice
+    </a>
+    <a href="/livestream" class="sb-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="4" width="20" height="16" rx="2"/>
+        <circle cx="12" cy="12" r="3"/>
+        <line x1="2" y1="8" x2="6" y2="8"/>
+        <line x1="2" y1="12" x2="4" y2="12"/>
+        <line x1="2" y1="16" x2="6" y2="16"/>
+      </svg>
+      5G Live Stream
+      <span class="sb-badge-5g">5G</span>
+    </a>
+    <a href="/architecture" class="sb-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      Market Prices
+    </a>
+  </div>
+
+  <!-- LOGOUT BUTTON - MOVED TO BOTTOM ABOVE FARM INFO -->
+  <div class="sb-logout">
+    <a href="#" class="sb-item" onclick="logout()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+      Logout
+    </a>
+  </div>
+
+  <div class="sb-footer">
+    <div class="farm-card">
+      <div class="farm-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+      <div><div class="farm-name" id="farmName">Loading...</div><div class="farm-sub" id="farmDetails">Loading...</div></div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="tb-left">
+      <span class="tb-title">Farm Dashboard</span>
+      <span class="tb-sub" id="ts">Loading...</span>
+    </div>
+    <div class="tb-right">
+      <button class="refresh-btn" id="refreshBtn" onclick="refreshAll()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Refresh
+      </button>
+      <div class="status-pill"><div class="live-dot"></div> <span id="nodeStatus">Loading...</span></div>
+      <div class="av-btn"><span id="userInitial">U</span></div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- WEATHER STRIP -->
+    <div class="weather-strip">
+      <div class="ws-left">
+        <svg width="42" height="42" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="32" cy="32" r="14" fill="#FDD835" opacity=".9"/>
+          <g stroke="#FDD835" stroke-width="3" stroke-linecap="round" opacity=".7">
+            <line x1="32" y1="8" x2="32" y2="2"/><line x1="32" y1="62" x2="32" y2="56"/>
+            <line x1="8" y1="32" x2="2" y2="32"/><line x1="62" y1="32" x2="56" y2="32"/>
+            <line x1="17" y1="17" x2="13" y2="13"/><line x1="51" y1="51" x2="47" y2="47"/>
+            <line x1="47" y1="17" x2="51" y2="13"/><line x1="13" y1="51" x2="17" y2="47"/>
+          </g>
+        </svg>
+        <div>
+          <div class="ws-temp" id="wtemp">--°C</div>
+          <div class="ws-info"><div class="ws-cond" id="wcond">Loading...</div><div class="ws-loc" id="wloc">Loading...</div></div>
+        </div>
+      </div>
+      <div class="ws-mid">
+        <div class="witem"><div class="wlbl">Humidity</div><div class="wval" id="whum">--%</div></div>
+        <div class="witem"><div class="wlbl">Wind</div><div class="wval" id="wwind">-- m/s</div></div>
+        <div class="witem"><div class="wlbl">Feels Like</div><div class="wval" id="wfeel">--°C</div></div>
+        <div class="witem"><div class="wlbl">Rain Chance</div><div class="wval" id="wrain">--%</div></div>
+      </div>
+      <div class="ws-right" id="wforecast"></div>
+    </div>
+
+    <!-- SENSOR CARDS -->
+    <div class="sensor-grid" id="sensorGrid">
+      <!-- filled by JS -->
+    </div>
+
+    <!-- MAIN GRID: Chart + Alerts -->
+    <div class="main-grid">
+      <!-- Chart Card -->
+      <div class="card">
+        <div class="card-head">
+          <div><div class="card-title">Soil Nutrients Trend (7 Days)</div><div class="card-sub">Live sensor readings</div></div>
+          <select id="chartSelect" onchange="updateChart()" style="border:1px solid var(--bd);border-radius:6px;padding:4px 8px;font-size:11px;font-family:inherit;background:#fff">
+            <option value="npk">NPK</option>
+            <option value="moisture">Moisture</option>
+          </select>
+        </div>
+        <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
+      </div>
+
+      <!-- Alerts Card -->
+      <div class="card">
+        <div class="card-head">
+          <div><div class="card-title">Smart Alerts</div><div class="card-sub" id="alertCount">Loading alerts...</div></div>
+          <button class="view-all" onclick="loadAlerts()">Refresh</button>
+        </div>
+        <div class="alert-list" id="alertList">
+          <div style="padding:25px;text-align:center;color:#777;font-size:14px">Loading Smart Alerts...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM GRID -->
+    <div class="bottom-grid">
+      <!-- NPK Detail -->
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">NPK Detail</div><div class="card-sub">Optimal vs current</div></div></div>
+        <div id="npkDetail"></div>
+      </div>
+      <!-- IoT Nodes -->
+      <div class="card">
+        <div class="card-head">
+          <div><div class="card-title">IoT Nodes</div><div class="card-sub">ESP32 field sensors</div></div>
+          <span style="font-size:11px;color:var(--p);font-weight:600" id="nodeCount">Loading...</span>
+        </div>
+        <div class="node-list" id="nodeList">
+          <div style="padding:15px;text-align:center;color:#777;font-size:13px">Loading nodes...</div>
+        </div>
+      </div>
+      <!-- Quick Actions -->
+      <div class="card">
+        <div class="card-head"><div class="card-title">Quick Actions</div></div>
+        <div class="quick-actions">
+          <a href="/analytics" class="qa-btn"><div class="qa-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>Analyze Plant</a>
+          <a href="/recommendation" class="qa-btn"><div class="qa-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>Crop Advice</a>
+          <a href="/architecture" class="qa-btn"><div class="qa-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div>Market Prices</a>
+          <a href="#" class="qa-btn" onclick="exportReport()"><div class="qa-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>Send Report</a>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ==========================================================
+// LOGIN CHECK
+// ==========================================================
+
+const user = JSON.parse(localStorage.getItem("user"));
+const farm = JSON.parse(localStorage.getItem("farm"));
+
+if (!user || !farm) {
+    window.location.href = "/login";
+}
+
+const userId = user.id;
+const farmId = farm.id;
+const API_BASE = "";
+
+// ==========================================================
+// DISPLAY USER INFO
+// ==========================================================
+
+document.getElementById("userInitial").textContent = user.first_name.charAt(0).toUpperCase();
+document.getElementById("farmName").textContent = farm.farm_name || "My Farm";
+document.getElementById("farmDetails").textContent = 
+    `${farm.district || ""}, ${farm.state || ""} · ${farm.farm_size || 0} Acres`;
+
+// ==========================================================
+// TIMESTAMP
+// ==========================================================
+
+function setTimestamp(){
+  const now = new Date();
+  document.getElementById('ts').textContent = 'Last updated: ' + now.toLocaleTimeString('en-IN') + ' — ' + now.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
+}
+setTimestamp();
+
+// ==========================================================
+// SENSOR DATA
+// ==========================================================
+
+const sensors = [
+  {label:'Nitrogen (N)',key:'nitrogen',val:0,unit:'ppm',min:0,max:100,opt:[40,60],color:'#2E7D32'},
+  {label:'Phosphorus (P)',key:'phosphorus',val:0,unit:'ppm',min:0,max:80,opt:[35,45],color:'#F9A825',warn:true},
+  {label:'Potassium (K)',key:'potassium',val:0,unit:'ppm',min:0,max:150,opt:[80,120],color:'#1565C0'},
+  {label:'TDS',key:'tds',val:0,unit:'ppm',min:0,max:2000,opt:[800,1200],color:'#D32F2F',warn:true},
+  {label:'Soil pH',key:'ph',val:0,unit:'pH',min:0,max:14,opt:[6,7.5],color:'#4CAF50'},
+  {label:'Moisture',key:'soil_moisture',val:0,unit:'%',min:0,max:100,opt:[55,75],color:'#0288D1'},
+  {label:'Temperature',key:'temperature',val:0,unit:'°C',min:0,max:50,opt:[22,35],color:'#E65100'},
+  {label:'Humidity',key:'humidity',val:0,unit:'%',min:0,max:100,opt:[50,80],color:'#6A1B9A'},
+];
+
+function buildSensorCards(){
+  const g = document.getElementById('sensorGrid');
+  g.innerHTML = sensors.map(s => {
+    const pct = Math.min(Math.round((s.val - s.min) / (s.max - s.min) * 100), 100);
+    const ok = s.val >= s.opt[0] && s.val <= s.opt[1];
+    const badge = ok ? '<span class="sc-badge badge-ok">Optimal</span>' : 
+                  (s.warn ? '<span class="sc-badge badge-warn">Alert</span>' : '<span class="sc-badge badge-low">Low</span>');
+    return `<div class="sensor-card" style="--bar-color:${s.color}">
+      <div class="sc-top"><div class="sc-label">${s.label}</div>${badge}</div>
+      <div class="sc-val" style="color:${s.color}">${s.val}</div>
+      <div class="sc-unit">${s.unit}</div>
+      <div class="sc-bar-wrap">
+        <div class="sc-bar-track"><div class="sc-bar-fill" style="width:${pct}%"></div></div>
+        <div class="sc-range"><span>${s.min}</span><span>Opt: ${s.opt[0]}–${s.opt[1]}</span><span>${s.max}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+buildSensorCards();
+
+// ==========================================================
+// CHART.JS
+// ==========================================================
+
+const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+let chartData = {
+  npk: {
+    labels: days,
+    datasets: [
+      {label:'Nitrogen',data:[0,0,0,0,0,0,0],borderColor:'#2E7D32',backgroundColor:'rgba(46,125,50,.08)',tension:.4,fill:true,pointRadius:4,pointHoverRadius:6},
+      {label:'Phosphorus',data:[0,0,0,0,0,0,0],borderColor:'#F9A825',backgroundColor:'rgba(249,168,37,.06)',tension:.4,fill:true,pointRadius:4,pointHoverRadius:6},
+      {label:'Potassium',data:[0,0,0,0,0,0,0],borderColor:'#1565C0',backgroundColor:'rgba(21,101,192,.06)',tension:.4,fill:true,pointRadius:4,pointHoverRadius:6},
+    ]
+  },
+  moisture: {
+    labels: days,
+    datasets: [{label:'Moisture %',data:[0,0,0,0,0,0,0],borderColor:'#0288D1',backgroundColor:'rgba(2,136,209,.08)',tension:.4,fill:true,pointRadius:4,pointHoverRadius:6}]
+  }
+};
+let myChart;
+
+function initChart(){
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  myChart = new Chart(ctx, {
+    type:'line',
+    data:chartData.npk,
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{family:'Inter',size:11},boxWidth:10,padding:14}}},
+      scales:{
+        x:{grid:{display:false},ticks:{font:{family:'Inter',size:11},color:'#747970'}},
+        y:{grid:{color:'#E0E5E0',lineWidth:1},ticks:{font:{family:'Inter',size:11},color:'#747970'}}
+      }
+    }
+  });
+}
+initChart();
+
+function updateChart(){
+  const v = document.getElementById('chartSelect').value;
+  myChart.data = chartData[v];
+  myChart.update();
+}
+
+// ==========================================================
+// LOAD SENSOR DATA FROM BACKEND
+// ==========================================================
+
+async function loadSensorData() {
+  try {
+    const response = await fetch(`/api/latest/${farmId}`);
+    if (!response.ok) throw new Error('Sensor API error');
+    const data = await response.json();
+    
+    // Update sensors
+    sensors.find(s => s.key === 'nitrogen').val = data.nitrogen ?? 0;
+    sensors.find(s => s.key === 'phosphorus').val = data.phosphorus ?? 0;
+    sensors.find(s => s.key === 'potassium').val = data.potassium ?? 0;
+    sensors.find(s => s.key === 'tds').val = data.tds ?? 0;
+    sensors.find(s => s.key === 'ph').val = data.ph ?? 0;
+    sensors.find(s => s.key === 'soil_moisture').val = data.soil_moisture ?? 0;
+    sensors.find(s => s.key === 'temperature').val = data.temperature ?? 0;
+    sensors.find(s => s.key === 'humidity').val = data.humidity ?? 0;
+    
+    buildSensorCards();
+    
+    // Update NPK detail
+    document.getElementById('npkDetail').innerHTML = `
+      <div class="npk-row"><div class="npk-name">Nitrogen (N)</div>
+        <div class="npk-track"><div class="npk-fill" style="width:${Math.min(data.nitrogen ?? 0, 100)}%;background:#2E7D32"></div></div>
+        <div class="npk-val">${data.nitrogen ?? 0}</div>
+        <div class="npk-status" style="color:${(data.nitrogen ?? 0) >= 40 ? '#2E7D32' : '#F9A825'}">${(data.nitrogen ?? 0) >= 40 ? 'OK' : 'Low'}</div></div>
+      <div class="npk-row"><div class="npk-name">Phosphorus (P)</div>
+        <div class="npk-track"><div class="npk-fill" style="width:${Math.min(data.phosphorus ?? 0, 80)}%;background:#F9A825"></div></div>
+        <div class="npk-val">${data.phosphorus ?? 0}</div>
+        <div class="npk-status" style="color:${(data.phosphorus ?? 0) >= 35 ? '#2E7D32' : '#F9A825'}">${(data.phosphorus ?? 0) >= 35 ? 'OK' : 'Low'}</div></div>
+      <div class="npk-row"><div class="npk-name">Potassium (K)</div>
+        <div class="npk-track"><div class="npk-fill" style="width:${Math.min(data.potassium ?? 0, 150)}%;background:#1565C0"></div></div>
+        <div class="npk-val">${data.potassium ?? 0}</div>
+        <div class="npk-status" style="color:${(data.potassium ?? 0) >= 80 ? '#2E7D32' : '#F9A825'}">${(data.potassium ?? 0) >= 80 ? 'OK' : 'Low'}</div></div>
+      <div class="npk-row"><div class="npk-name">Soil pH</div>
+        <div class="npk-track"><div class="npk-fill" style="width:${((data.ph ?? 0) / 14) * 100}%;background:#00897B"></div></div>
+        <div class="npk-val">${data.ph ?? '--'}</div>
+        <div class="npk-status" style="color:${(data.ph ?? 0) >= 6 && (data.ph ?? 0) <= 7.5 ? '#2E7D32' : '#F9A825'}">${(data.ph ?? 0) >= 6 && (data.ph ?? 0) <= 7.5 ? 'OK' : 'Adjust'}</div></div>
+      <div class="npk-row"><div class="npk-name">TDS</div>
+        <div class="npk-track"><div class="npk-fill" style="width:${Math.min((data.tds ?? 0) / 20, 100)}%;background:#D32F2F"></div></div>
+        <div class="npk-val">${data.tds ?? '--'}</div>
+        <div class="npk-status" style="color:${(data.tds ?? 0) <= 1200 ? '#2E7D32' : '#D32F2F'}">${(data.tds ?? 0) <= 1200 ? 'OK' : 'High'}</div></div>
+    `;
+    
+    // Update chart with new data
+    if (myChart) {
+      myChart.data.datasets[0].data.push(data.nitrogen ?? 0);
+      myChart.data.datasets[0].data.shift();
+      if (myChart.data.datasets[1]) {
+        myChart.data.datasets[1].data.push(data.phosphorus ?? 0);
+        myChart.data.datasets[1].data.shift();
+      }
+      if (myChart.data.datasets[2]) {
+        myChart.data.datasets[2].data.push(data.potassium ?? 0);
+        myChart.data.datasets[2].data.shift();
+      }
+      myChart.update();
+    }
+    
+    document.getElementById('nodeStatus').textContent = 'Sensors Live';
+    setTimestamp();
+  } catch (e) {
+    console.log('Sensor load error:', e);
+    document.getElementById('nodeStatus').textContent = 'No Data';
+  }
+}
+
+// ==========================================================
+// LOAD WEATHER FROM BACKEND
+// ==========================================================
+async function loadWeather() {
+  try {
+    // Get farm from localStorage
+    const farm = JSON.parse(localStorage.getItem("farm"));
+    if (!farm || !farm.id) {
+      // Fallback to default weather
+      const response = await fetch(`/api/weather`);
+      if (!response.ok) throw new Error('Weather API error');
+      const weather = await response.json();
+      // ... display weather
+      return;
+    }
+    
+    // Use farm-specific weather
+    const response = await fetch(`/api/weather/${farm.id}`);
+    if (!response.ok) throw new Error('Weather API error');
+    const weather = await response.json();
+    
+    document.getElementById('wtemp').textContent = Math.round(weather.temperature) + '°C';
+    document.getElementById('wcond').textContent = weather.condition || '--';
+    document.getElementById('wloc').textContent = weather.location || '--';
+    document.getElementById('whum').textContent = weather.humidity + '%';
+    document.getElementById('wwind').textContent = weather.wind + ' m/s';
+    document.getElementById('wfeel').textContent = Math.round(weather.feels_like) + '°C';
+    
+    // Update temperature and humidity sensor cards
+    sensors.find(s => s.key === 'temperature').val = weather.temperature || 0;
+    sensors.find(s => s.key === 'humidity').val = weather.humidity || 0;
+    buildSensorCards();
+  } catch(e) {
+    console.log('Weather error:', e);
+  }
+}
+
+
+
+// ==========================================================
+// LOAD WEATHER FORECAST
+// ==========================================================
+
+async function loadForecast() {
+  try {
+    // Get farm from localStorage
+    const farm = JSON.parse(localStorage.getItem("farm"));
+    
+    let forecast = [];
+    let location = '';
+    
+    if (!farm || !farm.id) {
+      // Fallback to default forecast
+      const response = await fetch(`/api/weather/forecast`);
+      if (!response.ok) throw new Error('Forecast API error');
+      forecast = await response.json();
+      location = 'Patna';
+    } else {
+      // Use farm-specific forecast
+      const response = await fetch(`/api/weather/forecast/${farm.id}`);
+      if (!response.ok) throw new Error('Forecast API error');
+      const data = await response.json();
+      forecast = data.forecast || [];  // Extract the forecast array
+      location = data.location || 'Your Farm';
+    }
+    
+    // Display rain chance for today
+    if (forecast.length > 0) {
+      document.getElementById('wrain').textContent = forecast[0].rain_chance + '%';
+    }
+    
+    // Build forecast cards
+    let html = '';
+    forecast.slice(0, 5).forEach(day => {
+      const date = new Date(day.date || day.dt_txt);
+      const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+      let icon = '☀️';
+      const condition = day.condition || 'Clear';
+      switch(condition) {
+        case 'Clouds': icon = '☁️'; break;
+        case 'Rain': icon = '🌧️'; break;
+        case 'Clear': icon = '☀️'; break;
+        case 'Thunderstorm': icon = '⛈️'; break;
+        case 'Snow': icon = '❄️'; break;
+        case 'Mist': case 'Fog': icon = '🌫️'; break;
+      }
+      // Show rain chance on the card if > 0%
+      const rainDisplay = (day.rain_chance || 0) > 0 ? 
+        `<div style="font-size:8px;color:rgba(255,255,255,.5);margin-top:2px">${day.rain_chance}% rain</div>` : '';
+      
+      html += `<div class="fday">
+        <div class="fd-day">${weekday}</div>
+        <div class="fd-icon">${icon}</div>
+        <div class="fd-hi">${Math.round(day.temp_max || day.temperature || 0)}°</div>
+        <div class="fd-lo">${Math.round(day.temp_min || 0)}°</div>
+        ${rainDisplay}
+      </div>`;
+    });
+    document.getElementById('wforecast').innerHTML = html;
+  } catch(e) {
+    console.log('Forecast error:', e);
+    document.getElementById('wforecast').innerHTML = '<div style="color:rgba(255,255,255,.5);font-size:11px">Forecast unavailable</div>';
+  }
+}
+
+// ==========================================================
+// LOAD ALERTS FROM BACKEND
+// ==========================================================
+
+async function loadAlerts() {
+  try {
+    const response = await fetch(`/api/alerts/${farmId}`);
+    if (!response.ok) throw new Error('Alerts API error');
+    const data = await response.json();
+    
+    document.getElementById('alertCount').textContent = data.total_alerts + ' Active Alerts';
+    
+    let html = '';
+    if (data.alerts && data.alerts.length > 0) {
+      data.alerts.forEach(alert => {
+        let css = 'info';
+        if (alert.level === 'critical') css = 'danger';
+        else if (alert.level === 'warning') css = 'warn';
+        else if (alert.level === 'success') css = 'ok';
+        html += `<div class="alert-item ${css}">
+          <div class="al-icon">${alert.icon || '⚠️'}</div>
+          <div><div class="al-t">${alert.title}</div><div class="al-d">${alert.message}</div><div class="al-time">Just Now</div></div>
+        </div>`;
+      });
+    } else {
+      html = `<div style="padding:15px;text-align:center;color:#777;font-size:13px">All systems are healthy! 🟢</div>`;
+    }
+    document.getElementById('alertList').innerHTML = html;
+  } catch(e) {
+    console.log('Alerts error:', e);
+    document.getElementById('alertList').innerHTML = `<div style="padding:15px;text-align:center;color:red">Unable to load alerts.</div>`;
+  }
+}
+// ==========================================================
+// GENERATE STREAM LINK
+// ==========================================================
+
+async function generateStreamLink() {
+    try {
+        const response = await fetch('/generate-link');
+        const data = await response.json();
+        
+        console.log('🔗 Generated link:', data);
+        
+        // Show link and QR code
+        showLinkModal(data);
+        
+        // Auto-connect waiting for mobile
+        waitForMobile(data.link_id);
+        
+    } catch(e) {
+        console.error('Error generating link:', e);
+        alert('Failed to generate stream link');
+    }
+}
+
+function showLinkModal(data) {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position:fixed;
+        top:0;left:0;right:0;bottom:0;
+        background:rgba(0,0,0,0.5);
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        z-index:1000;
+    `;
+    
+    modal.innerHTML = `
+        <div style="background:white;padding:40px;border-radius:16px;max-width:400px;width:100%;text-align:center;">
+            <h2>📱 Share to Stream</h2>
+            <p style="color:#666;margin:10px 0;">Scan QR code with mobile</p>
+            <img src="${data.qr_code}" style="width:200px;height:200px;margin:15px auto;display:block;">
+            <div style="background:#f5f5f5;padding:10px;border-radius:8px;word-break:break-all;font-size:12px;margin:10px 0;">
+                ${data.mobile_link}
+            </div>
+            <button onclick="copyLink('${data.mobile_link}')" style="padding:10px 20px;background:#2E7D32;color:white;border:none;border-radius:8px;cursor:pointer;">
+                📋 Copy Link
+            </button>
+            <button onclick="this.closest('div[style]').remove()" style="padding:10px 20px;background:#666;color:white;border:none;border-radius:8px;cursor:pointer;margin-left:10px;">
+                Close
+            </button>
+            <div id="waitingStatus" style="margin-top:15px;color:#666;font-size:14px;">
+                ⏳ Waiting for mobile to connect...
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function copyLink(link) {
+    navigator.clipboard.writeText(link);
+    alert('Link copied! Share it with mobile user.');
+}
+
+// Wait for mobile to connect via link
+function waitForMobile(linkId) {
+    if (!signalingWS || !isSignalingConnected) {
+        console.error('Not connected to signaling server');
+        return;
+    }
+    
+    // Send request to wait for specific link
+    signalingWS.send(JSON.stringify({
+        type: 'wait_for_link',
+        link_id: linkId
+    }));
+    
+    // Listen for mobile connection
+    signalingWS.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        
+        if (data.type === 'mobile_connected' && data.link_id === linkId) {
+            // Mobile connected via this link!
+            console.log('✅ Mobile connected:', data.mobile_id);
+            document.getElementById('waitingStatus').textContent = '✅ Mobile connected! Streaming...';
+            
+            // Auto-pair
+            pairWithMobile(data.mobile_id);
+            
+            // Close modal after 2 seconds
+            setTimeout(() => {
+                const modal = document.querySelector('div[style*="position:fixed"]');
+                if (modal) modal.remove();
+            }, 2000);
+        }
+    };
+}
+
+// Add button to dashboard
+function addStreamButton() {
+    const quickActions = document.querySelector('.quick-actions');
+    if (quickActions) {
+        const btn = document.createElement('div');
+        btn.className = 'qa-btn';
+        btn.onclick = generateStreamLink;
+        btn.innerHTML = `
+            <div class="qa-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2">
+                    <polygon points="23 7 16 12 23 17 23 7"/>
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                </svg>
+            </div>
+            Start Stream
+        `;
+        quickActions.prepend(btn);
+    }
+}
+
+// Call when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // ... existing code ...
+    addStreamButton();
+});
+// ==========================================================
+// LOAD NODES
+// ==========================================================
+
+async function loadNodes() {
+  try {
+    const response = await fetch(`/api/count/${farmId}`);
+    if (!response.ok) throw new Error('Node count error');
+    const data = await response.json();
+    document.getElementById('nodeCount').textContent = `${data.total_readings || 0} readings`;
+    
+    document.getElementById('nodeList').innerHTML = `
+      <div class="node-item"><div class="node-dot" style="background:#4CAF50"></div>
+        <div><div class="node-name">Node #1 — Field A</div><div class="node-sub">NPK + TDS + pH</div></div>
+        <span class="node-sig" style="color:var(--p)">Active</span>
+      </div>
+      <div class="node-item"><div class="node-dot" style="background:#4CAF50"></div>
+        <div><div class="node-name">Node #2 — Field B</div><div class="node-sub">NPK + Moisture + Temp</div></div>
+        <span class="node-sig" style="color:var(--p)">Active</span>
+      </div>
+      <div class="node-item"><div class="node-dot" style="background:#F9A825"></div>
+        <div><div class="node-name">Node #3 — Greenhouse</div><div class="node-sub">Temp + Humidity + EC</div></div>
+        <span class="node-sig" style="color:var(--wa)">Standby</span>
+      </div>
+    `;
+  } catch(e) {
+    console.log('Nodes error:', e);
+  }
+}
+
+// ==========================================================
+// REFRESH ALL
+// ==========================================================
+
+function refreshAll() {
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+  Promise.all([loadSensorData(), loadWeather(), loadForecast(), loadAlerts(), loadNodes()])
+    .finally(() => {
+      btn.classList.remove('spinning');
+      setTimestamp();
+    });
+}
+
+// ==========================================================
+// EXPORT REPORT
+// ==========================================================
+
+function exportReport() {
+  alert('📊 Report exported as PDF (backend integration coming soon)');
+}
+
+// ==========================================================
+// LOGOUT
+// ==========================================================
+
+function logout() {
+  localStorage.clear();
+  window.location.href = '/login';
+}
+
+// ==========================================================
+// INITIAL LOAD
+// ==========================================================
+
+loadSensorData();
+loadWeather();
+loadForecast();
+loadAlerts();
+loadNodes();
+
+// Auto refresh every 30 seconds
+setInterval(loadSensorData, 30000);
+setInterval(loadAlerts, 60000);
+</script>
+</body>
+</html>

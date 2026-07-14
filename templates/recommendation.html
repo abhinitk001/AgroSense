@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crop Recommendations — AgroSense</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p:#2E7D32;--pd:#1B5E20;--s:#4CAF50;--sl:#C8E6C9;
+  --bg:#F5F7FA;--sf:#FFFFFF;--tx:#1C2B1E;--mu:#747970;--bd:#E0E5E0;
+  --dr:#D32F2F;--wa:#F9A825;--bl:#1565C0;
+  --r:12px;--rl:16px;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 4px 12px rgba(0,0,0,.05);
+  --shm:0 4px 6px rgba(0,0,0,.06),0 10px 20px rgba(0,0,0,.05);
+}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--tx);line-height:1.6;-webkit-font-smoothing:antialiased;display:flex;height:100vh;overflow:hidden}
+.sidebar{width:240px;flex-shrink:0;background:#fff;border-right:1px solid var(--bd);display:flex;flex-direction:column;height:100vh;overflow-y:auto}
+.sb-head{padding:18px 20px 14px;border-bottom:1px solid var(--bd)}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--tx);font-weight:800;font-size:15px;letter-spacing:-.3px}
+.logo-box{width:28px;height:28px;background:var(--p);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-section{padding:16px 12px 4px}
+.sb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--mu);padding:0 8px;margin-bottom:6px}
+.sb-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;text-decoration:none;color:var(--mu);font-size:13px;font-weight:500;transition:all .18s;cursor:pointer;margin-bottom:1px}
+.sb-item:hover{background:var(--bg);color:var(--tx)}
+.sb-item.active{background:rgba(46,125,50,.1);color:var(--p);font-weight:600}
+.sb-item.active svg{stroke:var(--p)}
+.sb-item svg{flex-shrink:0;opacity:.7}
+.sb-item.active svg{opacity:1}
+.sb-badge-5g{background:linear-gradient(135deg,#1565C0,#0D47A1);color:#fff;font-size:10px;font-weight:700;padding:1px 8px;border-radius:10px;margin-left:auto}
+
+.sb-footer{margin-top:auto;padding:16px 12px;border-top:1px solid var(--bd)}
+.farm-card{background:var(--bg);border-radius:10px;padding:12px;display:flex;align-items:center;gap:9px}
+.farm-icon{width:34px;height:34px;background:rgba(46,125,50,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.farm-name{font-size:12px;font-weight:600;color:var(--tx)}
+.farm-sub{font-size:10px;color:var(--mu)}
+
+/* ── LOGOUT BUTTON ── */
+.sb-logout{padding:8px 12px;margin-bottom:4px}
+.sb-logout .sb-item{color:#D32F2F}
+.sb-logout .sb-item:hover{background:#FFEBEE;color:#D32F2F}
+.sb-logout .sb-item svg{stroke:#D32F2F}
+.sb-logout .sb-item:hover svg{stroke:#D32F2F}
+
+.main{flex:1;overflow-y:auto}
+.topbar{background:#fff;border-bottom:1px solid var(--bd);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.tb-title{font-size:16px;font-weight:700;letter-spacing:-.3px}
+.tb-sub{font-size:11px;color:var(--mu)}
+.tb-right{display:flex;align-items:center;gap:10px}
+.av-btn{width:32px;height:32px;border-radius:50%;background:var(--p);display:flex;align-items:center;justify-content:center;border:none;cursor:pointer}
+.av-btn span{color:#fff;font-size:12px;font-weight:700}
+.btn-p{background:var(--p);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:all .2s}
+.btn-p:hover{background:var(--pd)}
+
+.content{padding:22px 28px;display:flex;flex-direction:column;gap:20px}
+
+/* ── INPUT FORM ── */
+.input-form{background:#fff;border-radius:var(--rl);border:1px solid var(--bd);box-shadow:var(--sh);overflow:hidden}
+.if-head{padding:16px 20px;border-bottom:1px solid var(--bg);display:flex;align-items:center;justify-content:space-between}
+.if-title{font-size:13px;font-weight:700}
+.if-sub{font-size:11px;color:var(--mu);margin-top:2px}
+.if-body{padding:20px;display:grid;grid-template-columns:repeat(4,1fr) auto;gap:14px;align-items:end}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-label{font-size:11px;font-weight:600;color:var(--mu)}
+.form-input,.form-select{padding:9px 12px;border:1.5px solid var(--bd);border-radius:9px;font-size:12px;font-family:inherit;color:var(--tx);outline:none;transition:border-color .2s;width:100%}
+.form-input:focus,.form-select:focus{border-color:var(--p)}
+.gen-btn{padding:10px 18px;background:var(--p);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;display:flex;align-items:center;gap:7px;transition:all .2s;height:38px}
+.gen-btn:hover{background:var(--pd)}
+.gen-btn .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
+.gen-btn.loading .label{display:none}
+.gen-btn.loading .spinner{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── CONTEXT ROW ── */
+.ctx-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.ctx-card{background:#fff;border-radius:var(--r);border:1px solid var(--bd);box-shadow:var(--sh);padding:14px 16px;display:flex;align-items:center;gap:12px}
+.ctx-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ctx-label{font-size:11px;font-weight:600;color:var(--mu);margin-bottom:2px}
+.ctx-val{font-size:15px;font-weight:700;letter-spacing:-.3px}
+.ctx-note{font-size:10px;color:var(--mu);margin-top:1px}
+
+/* ── SOIL HEALTH CARD (Context Row Style) ── */
+.soil-health-card{background:#fff;border-radius:var(--r);border:1px solid var(--bd);box-shadow:var(--sh);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer}
+.sh-icon{width:38px;height:38px;background:rgba(46,125,50,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sh-content{flex:1;min-width:0}
+.sh-label{font-size:11px;font-weight:600;color:var(--mu);margin-bottom:2px}
+.sh-val{font-size:15px;font-weight:700;letter-spacing:-.3px}
+.sh-detail{font-size:10px;color:var(--mu);margin-top:1px;display:flex;gap:8px;flex-wrap:wrap}
+.sh-detail span{display:inline-block;padding:1px 8px;border-radius:10px;font-size:9px;font-weight:600}
+.sh-detail .good{background:rgba(46,125,50,.1);color:#2E7D32}
+.sh-detail .medium{background:#FFF9C4;color:#E65100}
+.sh-detail .poor{background:#FFEBEE;color:#D32F2F}
+
+/* ── CROP GRID ── */
+.crop-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.crop-card{background:#fff;border-radius:var(--rl);border:1px solid var(--bd);box-shadow:var(--sh);overflow:hidden;transition:all .25s;cursor:pointer;position:relative}
+.crop-card:hover{box-shadow:var(--shm);transform:translateY(-3px)}
+.crop-card.top{border:2px solid var(--p)}
+
+.rank-ribbon{position:absolute;top:12px;left:12px;z-index:1;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;display:flex;align-items:center;gap:4px}
+.rank-1{background:var(--p);color:#fff}
+.rank-2{background:var(--wa);color:#fff}
+.rank-3{background:#9E9E9E;color:#fff}
+.rank-4{background:var(--bg);color:var(--mu);border:1px solid var(--bd)}
+.rank-5{background:var(--bg);color:var(--mu);border:1px solid var(--bd)}
+
+.cc-header{padding:20px 20px 0;display:flex;align-items:flex-start;justify-content:space-between;position:relative}
+.crop-emoji{font-size:42px;line-height:1;margin-bottom:8px}
+.suit-ring{position:relative;width:58px;height:58px;flex-shrink:0}
+.suit-ring svg{transform:rotate(-90deg)}
+.suit-pct{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
+.suit-num{font-size:14px;font-weight:800;color:var(--p)}
+.suit-lbl{font-size:8px;color:var(--mu);font-weight:600}
+
+.crop-name{font-size:18px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px}
+.crop-season{font-size:11px;color:var(--mu);display:flex;align-items:center;gap:5px}
+
+.reason-bar{margin:12px 20px;padding:10px 12px;background:rgba(46,125,50,.07);border-left:3px solid var(--p);border-radius:0 8px 8px 0;font-size:11px;line-height:1.6;color:var(--tx)}
+
+.cc-stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--bg);margin:0}
+.cc-stat{padding:12px 14px;border-right:1px solid var(--bg);text-align:center}
+.cc-stat:last-child{border-right:none}
+.csl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--mu);margin-bottom:3px}
+.csv{font-size:13px;font-weight:700}
+
+.needs-row{padding:12px 20px 14px;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--bg)}
+.need-pill{font-size:10px;font-weight:600;padding:3px 9px;border-radius:12px;display:flex;align-items:center;gap:4px}
+.np-n{background:rgba(46,125,50,.1);color:var(--p)}
+.np-p{background:#FFF9C4;color:#E65100}
+.np-k{background:#E3F2FD;color:#1565C0}
+.np-w{background:#E1F5FE;color:#0277BD}
+
+/* ── CALENDAR ── */
+.calendar-card{background:#fff;border-radius:var(--rl);border:1px solid var(--bd);box-shadow:var(--sh);padding:20px}
+.cal-title{font-size:13px;font-weight:700;margin-bottom:14px}
+.cal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.cal-item{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--bd)}
+.cal-head{padding:8px 12px;font-size:11px;font-weight:700}
+.cal-body{padding:8px 12px;padding-top:0}
+.cal-crop{font-size:13px;font-weight:700;margin-bottom:2px}
+.cal-date{font-size:10px;color:var(--mu)}
+.cal-dot{width:8px;height:8px;border-radius:50%;position:absolute;top:10px;right:10px}
+
+/* ── ML PREDICTION CARD ── */
+.ml-prediction-card{background:#fff;border-radius:var(--rl);border:2px solid var(--p);box-shadow:var(--sh);padding:20px;display:none}
+.ml-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.ml-badge{background:var(--p);color:#fff;padding:4px 14px;border-radius:20px;font-size:11px;font-weight:700}
+.ml-sub{font-size:11px;color:var(--mu)}
+.ml-content{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.ml-emoji{font-size:48px;line-height:1}
+.ml-crop-info{flex:1}
+.ml-crop-name{font-size:22px;font-weight:800}
+.ml-confidence{font-size:13px;color:var(--mu)}
+.ml-confidence strong{font-weight:700}
+.ml-top3{background:var(--bg);padding:8px 16px;border-radius:8px;font-size:12px;color:var(--mu)}
+.ml-top3 strong{font-weight:600}
+.ml-top3 span{margin-left:8px}
+
+/* ── LOADING SKELETON ── */
+.skeleton{background:linear-gradient(90deg,var(--bd) 25%,#f0f0f0 50%,var(--bd) 75%);background-size:200% 100%;animation:skel 1.4s infinite;border-radius:6px}
+@keyframes skel{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1024px){.if-body{grid-template-columns:1fr 1fr}.crop-grid{grid-template-columns:1fr}.cal-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.content{padding:16px}.sidebar{width:60px}.sidebar .sb-label,.sidebar .sb-item span,.sidebar .sb-footer .farm-name,.sidebar .sb-footer .farm-sub{display:none}.sidebar .sb-item{padding:12px;justify-content:center}.sidebar .sb-item svg{margin:0}.if-body{grid-template-columns:1fr}.ctx-row{grid-template-columns:1fr}.cal-grid{grid-template-columns:1fr}.ml-content{flex-direction:column;text-align:center}}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-head">
+    <a href="/home" class="logo">
+      <div class="logo-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
+      AgroSense
+    </a>
+  </div>
+
+  <div class="sb-section">
+    <div class="sb-label">Overview</div>
+    <a href="/dashboard" class="sb-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</a>
+    <a href="/analytics" class="sb-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>Plant Analysis<span style="margin-left:auto;background:var(--p);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px">AI</span></a>
+  </div>
+
+  <div class="sb-section">
+    <div class="sb-label">Intelligence</div>
+    <a href="/recommendation" class="sb-item active"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Crop Advice</a>
+    <a href="/livestream" class="sb-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="4" width="20" height="16" rx="2"/>
+        <circle cx="12" cy="12" r="3"/>
+        <line x1="2" y1="8" x2="6" y2="8"/>
+        <line x1="2" y1="12" x2="4" y2="12"/>
+        <line x1="2" y1="16" x2="6" y2="16"/>
+      </svg>
+      5G Live Stream
+      <span class="sb-badge-5g">5G</span>
+    </a>
+    <a href="/architecture" class="sb-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Market Prices</a>
+  </div>
+
+  <!-- LOGOUT BUTTON - MOVED TO BOTTOM ABOVE FARM INFO -->
+  <div class="sb-logout">
+    <a href="#" class="sb-item" onclick="logout()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+      Logout
+    </a>
+  </div>
+
+  <div class="sb-footer">
+    <div class="farm-card">
+      <div class="farm-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+      <div><div class="farm-name" id="farmName">Loading...</div><div class="farm-sub" id="farmDetails">Loading...</div></div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div><div class="tb-title">AI Crop Recommendations</div><div class="tb-sub" id="methodLabel">Powered by Gemini AI · Live sensor data</div></div>
+    <div class="tb-right">
+      <button class="btn-p" onclick="regenerate()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Regenerate
+      </button>
+      <div class="av-btn"><span id="userInitial">U</span></div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- INPUT FORM -->
+    <div class="input-form">
+      <div class="if-head">
+        <div><div class="if-title">Farm Parameters</div><div class="if-sub">Adjust inputs to refine crop suggestions</div></div>
+      </div>
+      <div class="if-body">
+        <div class="form-group">
+          <label class="form-label">Location / District</label>
+          <input class="form-input" id="inputDistrict" placeholder="e.g. Ludhiana">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Farm Size (acres)</label>
+          <input class="form-input" type="number" id="inputFarmSize" placeholder="e.g. 45">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sowing Season</label>
+          <select class="form-select" id="inputSeason">
+            <option value="Rabi">Rabi (Oct – Apr)</option>
+            <option value="Kharif">Kharif (Jun – Oct)</option>
+            <option value="Zaid">Zaid (Mar – Jun)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Irrigation Type</label>
+          <select class="form-select" id="inputIrrigation">
+            <option value="Canal">Canal Irrigation</option>
+            <option value="Drip">Drip Irrigation</option>
+            <option value="Borewell">Borewell / Tubewell</option>
+            <option value="Rainfed">Rainfed</option>
+          </select>
+        </div>
+        <button class="gen-btn" id="genBtn" onclick="updateFarmAndRegenerate()">
+          <span class="label">Update</span>
+          <div class="spinner"></div>
+        </button>
+      </div>
+    </div>
+
+    <!-- CONTEXT ROW (UPDATED: Soil Health Assessment replaces Soil Health Score) -->
+    <div class="ctx-row">
+      <div class="ctx-card">
+        <div class="ctx-icon" style="background:rgba(46,125,50,.1)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        </div>
+        <div><div class="ctx-label">Temperature</div><div class="ctx-val" id="ctxTemp">--°C</div><div class="ctx-note">Live weather</div></div>
+      </div>
+      
+      <!-- SOIL HEALTH ASSESSMENT - Now in Context Row -->
+      <div class="soil-health-card" id="soilHealthCard">
+        <div class="sh-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </div>
+        <div class="sh-content">
+          <div class="sh-label">Soil Health Assessment</div>
+          <div class="sh-val" id="shScore">-- / 100</div>
+          <div class="sh-detail" id="shDetail">
+            <span class="good">Loading...</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ctx-card">
+        <div class="ctx-icon" style="background:rgba(21,101,192,.1)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1565C0" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg>
+        </div>
+        <div><div class="ctx-label">Rain Next 7 Days</div><div class="ctx-val" id="ctxRain">--%</div><div class="ctx-note">Weather forecast</div></div>
+      </div>
+    </div>
+
+    <!-- ML PREDICTION CARD (VISIBLE) -->
+    <div class="ml-prediction-card" id="mlPredictionCard">
+      <div class="ml-header">
+        <div class="ml-badge">🤖 ML MODEL PREDICTION</div>
+        <div class="ml-sub">Based on your trained crop model</div>
+      </div>
+      <div class="ml-content" id="mlPredictionContent">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+
+    <!-- CROP GRID -->
+    <div id="cropGridContainer">
+      <div class="crop-grid" id="cropGrid">
+        <!-- Built by JS from API -->
+      </div>
+    </div>
+
+    <!-- PLANTING CALENDAR -->
+    <div class="calendar-card">
+      <div class="cal-title">📅 Recommended Planting Calendar — <span id="calSeason">Rabi</span> Season</div>
+      <div class="cal-grid" id="calendarGrid">
+        <!-- Built by JS from API -->
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ==========================================================
+// LOGIN CHECK
+// ==========================================================
+
+const user = JSON.parse(localStorage.getItem("user"));
+const farm = JSON.parse(localStorage.getItem("farm"));
+
+if (!user || !farm) {
+    window.location.href = "/login";
+}
+
+document.getElementById("userInitial").textContent = user.first_name.charAt(0).toUpperCase();
+document.getElementById("farmName").textContent = farm.farm_name || "My Farm";
+document.getElementById("farmDetails").textContent = 
+    `${farm.district || ""}, ${farm.state || ""} · ${farm.farm_size || 0} Acres`;
+
+const farmId = farm.id;
+
+// ==========================================================
+// LOAD FARM PARAMETERS FROM DATABASE
+// ==========================================================
+
+async function loadFarmParams() {
+    try {
+        const response = await fetch(`/api/crop/farm-params/${farmId}`);
+        if (!response.ok) throw new Error('Failed to load farm params');
+        const data = await response.json();
+        
+        if (data.success) {
+            const f = data.farm;
+            document.getElementById('inputDistrict').value = f.district || '';
+            document.getElementById('inputFarmSize').value = f.farm_size || '';
+            document.getElementById('inputSeason').value = f.season || 'Rabi';
+            document.getElementById('inputIrrigation').value = f.irrigation || 'Canal';
+        }
+    } catch(e) {
+        console.log('Error loading farm params:', e);
+        document.getElementById('inputDistrict').value = farm.district || '';
+        document.getElementById('inputFarmSize').value = farm.farm_size || '';
+    }
+}
+
+// ==========================================================
+// UPDATE FARM PARAMETERS IN DATABASE
+// ==========================================================
+
+async function updateFarmAndRegenerate() {
+    const btn = document.getElementById('genBtn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+    
+    const district = document.getElementById('inputDistrict').value.trim();
+    const farmSize = parseFloat(document.getElementById('inputFarmSize').value);
+    const season = document.getElementById('inputSeason').value;
+    const irrigation = document.getElementById('inputIrrigation').value;
+    
+    try {
+        const params = new URLSearchParams();
+        if (district) params.append('district', district);
+        if (farmSize) params.append('farm_size', farmSize);
+        if (season) params.append('season', season);
+        if (irrigation) params.append('irrigation', irrigation);
+        
+        const response = await fetch(`/api/crop/update-farm/${farmId}?${params.toString()}`, {
+            method: 'PUT'
+        });
+        
+        if (!response.ok) throw new Error('Failed to update farm');
+        
+        farm.district = district || farm.district;
+        farm.farm_size = farmSize || farm.farm_size;
+        
+        await loadRecommendations();
+        
+    } catch(e) {
+        console.log('Update error:', e);
+        alert('Failed to update farm parameters. Please try again.');
+    } finally {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+    }
+}
+
+// ==========================================================
+// LOAD AI RECOMMENDATIONS FROM BACKEND
+// ==========================================================
+
+async function loadRecommendations() {
+    const grid = document.getElementById('cropGrid');
+    grid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:40px;background:#fff;border-radius:16px;border:1px solid var(--bd)">
+            <div style="font-size:24px;margin-bottom:12px">🤖</div>
+            <div style="font-size:14px;font-weight:600;margin-bottom:4px">Analyzing your farm data...</div>
+            <div style="font-size:12px;color:var(--mu)">Using AI to find the best crops for your soil and weather</div>
+            <div style="margin-top:16px;width:40px;height:40px;border:3px solid var(--bd);border-top-color:var(--p);border-radius:50%;animation:spin .8s linear infinite;display:inline-block"></div>
+        </div>
+    `;
+    
+    try {
+        const response = await fetch(`/api/crop/recommend/${farmId}`);
+        if (!response.ok) throw new Error('API error');
+        const data = await response.json();
+        
+        if (data.success) {
+            document.getElementById('methodLabel').textContent = `Powered by ${data.method || 'AI'} · Live sensor data`;
+            
+            // Build crops from Gemini
+            if (data.gemini_recommendations && data.gemini_recommendations.recommendations) {
+                buildCrops(data.gemini_recommendations.recommendations);
+            }
+            
+            // Build calendar from Gemini
+            if (data.gemini_recommendations && data.gemini_recommendations.planting_calendar) {
+                buildCalendar(data.gemini_recommendations.planting_calendar);
+            }
+            
+            // Display ML Prediction
+            if (data.ml_prediction) {
+                displayMLPrediction(data.ml_prediction);
+            }
+            
+            // Build Soil Health Assessment (in context row)
+            if (data.gemini_recommendations && data.gemini_recommendations.soil_health_assessment) {
+                displaySoilHealthAssessment(data.gemini_recommendations.soil_health_assessment);
+            }
+        } else {
+            throw new Error('No recommendations returned');
+        }
+    } catch(e) {
+        console.log('Error loading recommendations:', e);
+        grid.innerHTML = `
+            <div style="grid-column:1/-1;text-align:center;padding:40px;background:#fff;border-radius:16px;border:1px solid var(--bd)">
+                <div style="font-size:36px;margin-bottom:12px">⚠️</div>
+                <div style="font-size:14px;font-weight:600;margin-bottom:4px">Unable to load recommendations</div>
+                <div style="font-size:12px;color:var(--mu)">Please try again later</div>
+                <button onclick="regenerate()" style="margin-top:12px;padding:8px 20px;background:var(--p);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit">Retry</button>
+            </div>
+        `;
+    }
+}
+
+// ==========================================================
+// DISPLAY ML PREDICTION
+// ==========================================================
+
+function displayMLPrediction(data) {
+    const card = document.getElementById('mlPredictionCard');
+    const content = document.getElementById('mlPredictionContent');
+    
+    if (!data || !data.crop) {
+        card.style.display = 'none';
+        return;
+    }
+    
+    card.style.display = 'block';
+    
+    const info = data.crop_info || { emoji: '🌱', color: '#2E7D32' };
+    const confidence = data.confidence || 0;
+    
+    content.innerHTML = `
+        <div class="ml-emoji">${info.emoji}</div>
+        <div class="ml-crop-info">
+            <div class="ml-crop-name" style="color:${info.color}">${data.crop}</div>
+            <div class="ml-confidence">ML Model Confidence: <strong style="color:${info.color}">${confidence}%</strong></div>
+        </div>
+        <div style="flex:1"></div>
+        <div class="ml-top3">
+            <strong>Top 3 Predictions:</strong>
+            ${data.top_3 ? data.top_3.map((p, i) => 
+                `<span style="color:${i === 0 ? info.color : 'var(--mu)'}">${p.crop} (${p.confidence}%)</span>`
+            ).join('') : ''}
+        </div>
+    `;
+}
+
+// ==========================================================
+// DISPLAY SOIL HEALTH ASSESSMENT (In Context Row)
+// ==========================================================
+
+function displaySoilHealthAssessment(healthData) {
+    const score = healthData.score || 75;
+    const summary = healthData.summary || 'Your soil conditions are generally favorable.';
+    const recommendations = healthData.recommendations || 'Maintain regular soil testing.';
+    
+    // Update the soil health card in context row
+    document.getElementById('shScore').textContent = score + ' / 100';
+    
+    // Determine status
+    let statusClass = 'good';
+    let statusText = 'Excellent';
+    if (score < 60) { statusClass = 'poor'; statusText = 'Needs Improvement'; }
+    else if (score < 80) { statusClass = 'medium'; statusText = 'Good'; }
+    
+    // Create detail HTML with summary and recommendation
+    const detailHtml = `
+        <span class="${statusClass}">${statusText}</span>
+        <span style="font-size:10px;color:var(--mu);font-weight:normal">${summary.substring(0, 60)}${summary.length > 60 ? '...' : ''}</span>
+    `;
+    document.getElementById('shDetail').innerHTML = detailHtml;
+    
+    // Also store full recommendation for tooltip/click
+    document.getElementById('soilHealthCard').title = `${summary}\n\n💡 ${recommendations}`;
+}
+
+// ==========================================================
+// BUILD CROPS FROM API DATA
+// ==========================================================
+
+function buildCrops(recommendations) {
+    const rankLabels = ['🥇 Best Match', '🥈 Good Choice', '🥉 Alternative', '#4 Consider', '#5 Option'];
+    const rankClasses = ['rank-1', 'rank-2', 'rank-3', 'rank-4', 'rank-5'];
+    
+    document.getElementById('cropGrid').innerHTML = recommendations.map((c, i) => {
+        const circ = 2 * Math.PI * 24;
+        const off = circ - (circ * (c.suitability || 0) / 100);
+        const color = c.color || '#2E7D32';
+        const emoji = c.emoji || '🌱';
+        return `<div class="crop-card ${i === 0 ? 'top' : ''}">
+            <div class="rank-ribbon ${rankClasses[i] || 'rank-5'}">${rankLabels[i] || `#${i+1}`}</div>
+            <div class="cc-header">
+                <div>
+                    <div class="crop-emoji">${emoji}</div>
+                    <div class="crop-name">${c.crop || 'Unknown'}</div>
+                    <div class="crop-season">📅 ${c.season || 'N/A'}</div>
+                </div>
+                <div class="suit-ring">
+                    <svg width="58" height="58" viewBox="0 0 58 58">
+                        <circle cx="29" cy="29" r="24" fill="none" stroke="#E0E5E0" stroke-width="6"/>
+                        <circle cx="29" cy="29" r="24" fill="none" stroke="${color}" stroke-width="6"
+                            stroke-dasharray="${circ}" stroke-dashoffset="${off}" stroke-linecap="round"/>
+                    </svg>
+                    <div class="suit-pct"><div class="suit-num" style="color:${color}">${c.suitability || 0}%</div><div class="suit-lbl">Match</div></div>
+                </div>
+            </div>
+            <div class="reason-bar">${c.reason || 'Recommended based on your farm conditions.'}</div>
+            <div class="cc-stats">
+                <div class="cc-stat"><div class="csl">Est. Yield</div><div class="csv">${c.yield || 'N/A'}</div></div>
+                <div class="cc-stat"><div class="csl">Market Price</div><div class="csv" style="color:${color}">${c.price || 'N/A'}</div></div>
+                <div class="cc-stat"><div class="csl">Water Need</div><div class="csv">${c.water || 'Medium'}</div></div>
+            </div>
+            <div class="needs-row">
+                <span class="need-pill np-n">N: ${c.n || 'N/A'}</span>
+                <span class="need-pill np-p">P: ${c.p || 'N/A'}</span>
+                <span class="need-pill np-k">K: ${c.k || 'N/A'}</span>
+                <span class="need-pill np-w">💧 ${c.water || 'Medium'}</span>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ==========================================================
+// BUILD CALENDAR FROM API DATA
+// ==========================================================
+
+function buildCalendar(calendarData) {
+    const season = document.getElementById('inputSeason').value;
+    document.getElementById('calSeason').textContent = season;
+    
+    document.getElementById('calendarGrid').innerHTML = calendarData.map(item => {
+        const color = item.color || '#2E7D32';
+        const emoji = item.emoji || '🌱';
+        return `<div class="cal-item">
+            <div class="cal-head" style="background:rgba(${hexToRgb(color)},.08);color:${color}">
+                ${emoji} ${item.crop || 'Unknown'}
+            </div>
+            <div class="cal-body">
+                <div class="cal-crop">Sow: ${item.sow || 'N/A'}</div>
+                <div class="cal-date">Harvest: ${item.harvest || 'N/A'}</div>
+            </div>
+            <div class="cal-dot" style="background:${color}"></div>
+        </div>`;
+    }).join('');
+}
+
+// ==========================================================
+// HEX TO RGB HELPER
+// ==========================================================
+
+function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)}` : '46,125,50';
+}
+
+// ==========================================================
+// LOAD WEATHER CONTEXT
+// ==========================================================
+
+async function loadWeatherContext() {
+    try {
+        const farm = JSON.parse(localStorage.getItem("farm"));
+        let url = '/api/weather';
+        if (farm && farm.id) {
+            url = `/api/weather/${farm.id}`;
+        }
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Weather API error');
+        const data = await response.json();
+        document.getElementById('ctxTemp').textContent = Math.round(data.temperature) + '°C';
+    } catch(e) {
+        console.log('Weather context error:', e);
+    }
+}
+
+async function loadForecastContext() {
+    try {
+        const farm = JSON.parse(localStorage.getItem("farm"));
+        let url = '/api/weather/forecast';
+        if (farm && farm.id) {
+            url = `/api/weather/forecast/${farm.id}`;
+        }
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Forecast API error');
+        const data = await response.json();
+        const forecast = data.forecast || data;
+        if (forecast.length > 0) {
+            document.getElementById('ctxRain').textContent = forecast[0].rain_chance + '%';
+        }
+    } catch(e) {
+        console.log('Forecast context error:', e);
+    }
+}
+
+// ==========================================================
+// REGENERATE
+// ==========================================================
+
+function regenerate() {
+    loadRecommendations();
+    loadWeatherContext();
+    loadForecastContext();
+}
+
+// ==========================================================
+// LOGOUT
+// ==========================================================
+
+function logout() {
+    localStorage.clear();
+    window.location.href = '/login';
+}
+
+// ==========================================================
+// INIT
+// ==========================================================
+
+document.getElementById('inputSeason').addEventListener('change', () => {
+    document.getElementById('calSeason').textContent = document.getElementById('inputSeason').value;
+});
+
+loadFarmParams();
+loadRecommendations();
+loadWeatherContext();
+loadForecastContext();
+
+setInterval(loadWeatherContext, 600000);
+setInterval(loadForecastContext, 1800000);
+</script>
+</body>
+</html>

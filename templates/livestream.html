@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5G Live Stream — AgroSense</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        :root{
+            --p:#2E7D32;--pd:#1B5E20;--s:#4CAF50;
+            --bg:#F5F7FA;--sf:#FFFFFF;
+            --tx:#1C2B1E;--mu:#747970;--bd:#E0E5E0;
+            --dr:#D32F2F;--wa:#F9A825;--bl:#1565C0;
+            --gradient:linear-gradient(135deg,#43A047 0%,#2E7D32 50%,#1B5E20 100%);
+            --gradient-5g:linear-gradient(135deg,#1565C0 0%,#0D47A1 50%,#1A237E 100%);
+            --shadow-glow:0 20px 60px rgba(46,125,50,0.12);
+            --r:12px;--rl:16px;
+            --sh:0 1px 3px rgba(0,0,0,.07),0 4px 12px rgba(0,0,0,.05);
+            --shm:0 4px 6px rgba(0,0,0,.06),0 10px 20px rgba(0,0,0,.05);
+        }
+        body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--tx);line-height:1.6;-webkit-font-smoothing:antialiased;display:flex;height:100vh;overflow:hidden}
+
+        @keyframes pls{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+        @keyframes slide-up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+        /* ── SIDEBAR ── */
+        .sidebar{width:240px;flex-shrink:0;background:#fff;border-right:1px solid var(--bd);display:flex;flex-direction:column;height:100vh;overflow-y:auto}
+        .sb-head{padding:18px 20px 14px;border-bottom:1px solid var(--bd)}
+        .logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--tx);font-weight:800;font-size:15px;letter-spacing:-.3px}
+        .logo-box{width:28px;height:28px;background:var(--gradient);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(46,125,50,0.2)}
+        .sb-section{padding:16px 12px 4px}
+        .sb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--mu);padding:0 8px;margin-bottom:6px}
+        .sb-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;text-decoration:none;color:var(--mu);font-size:13px;font-weight:500;transition:all .18s;cursor:pointer;margin-bottom:1px}
+        .sb-item:hover{background:var(--bg);color:var(--tx)}
+        .sb-item.active{background:rgba(46,125,50,.1);color:var(--p);font-weight:600}
+        .sb-item.active svg{stroke:var(--p)}
+        .sb-item svg{flex-shrink:0;opacity:.7}
+        .sb-item.active svg{opacity:1}
+        .sb-badge{margin-left:auto;background:var(--gradient-5g);color:#fff;font-size:10px;font-weight:700;padding:1px 8px;border-radius:10px}
+        .sb-footer{margin-top:auto;padding:16px 12px;border-top:1px solid var(--bd)}
+        .farm-card{background:var(--bg);border-radius:10px;padding:12px;display:flex;align-items:center;gap:9px}
+        .farm-icon{width:34px;height:34px;background:rgba(46,125,50,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .farm-name{font-size:12px;font-weight:600;color:var(--tx)}
+        .farm-sub{font-size:10px;color:var(--mu)}
+
+        /* ── MAIN ── */
+        .main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+        .topbar{background:rgba(255,255,255,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--bd);padding:0 28px;height:64px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:10}
+        .tb-title{font-size:18px;font-weight:800;letter-spacing:-.5px;background:var(--gradient-5g);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .tb-sub{font-size:11px;color:var(--mu)}
+        .tb-right{display:flex;align-items:center;gap:12px}
+        .av-btn{width:34px;height:34px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;box-shadow:0 4px 12px rgba(46,125,50,0.2)}
+        .av-btn span{color:#fff;font-size:13px;font-weight:700}
+
+        /* ── CONTENT ── */
+        .content{padding:24px 28px;display:flex;flex-direction:column;gap:20px;animation:slide-up 0.4s ease}
+
+        /* ── 5G HERO BANNER ── */
+        .hero-5g{background:var(--gradient-5g);border-radius:var(--rl);padding:28px 32px;color:#fff;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(21,101,192,0.25)}
+        .hero-5g::before{content:'';position:absolute;top:-50%;right:-10%;width:300px;height:300px;background:rgba(255,255,255,0.04);border-radius:50%}
+        .hero-5g::after{content:'';position:absolute;bottom:-40%;left:20%;width:200px;height:200px;background:rgba(255,255,255,0.03);border-radius:50%}
+        .hero-5g-content{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+        .hero-5g h2{font-size:26px;font-weight:800;letter-spacing:-1px}
+        .hero-5g h2 span{font-size:14px;font-weight:400;opacity:0.7;display:block;margin-top:4px}
+        .hero-5g .badge-5g{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.12);padding:6px 16px;border-radius:100px;font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,0.15)}
+        .hero-5g .badge-5g .dot{width:8px;height:8px;background:#4CAF50;border-radius:50%;animation:pulse 1.5s infinite}
+        .hero-5g .status-text{font-size:14px;opacity:0.8}
+
+        /* ── STREAM GRID ── */
+        .stream-grid{display:grid;grid-template-columns:3fr 1.2fr;gap:20px}
+
+        /* ── VIDEO PLAYER ── */
+        .video-card{background:#fff;border-radius:var(--rl);border:1px solid var(--bd);box-shadow:var(--sh);overflow:hidden}
+        .video-card .card-head{padding:16px 20px;border-bottom:1px solid var(--bg);display:flex;justify-content:space-between;align-items:center}
+        .video-card .card-title{font-size:14px;font-weight:700}
+        .video-card .card-sub{font-size:11px;color:var(--mu)}
+        .video-container{background:#0a0a1a;position:relative;aspect-ratio:16/9;min-height:350px}
+        .video-container video{width:100%;height:100%;object-fit:cover;background:#000}
+        .video-overlay{position:absolute;bottom:16px;left:16px;right:16px;display:flex;justify-content:space-between;z-index:5;flex-wrap:wrap;gap:8px}
+        .video-overlay .badge{background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);padding:5px 12px;border-radius:6px;font-size:10px;color:#aaa}
+        .video-overlay .badge .val{color:#4CAF50;font-weight:600}
+        .video-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#444;z-index:1;background:#0a0a1a}
+        .video-placeholder .icon{font-size:48px;margin-bottom:12px}
+        .video-placeholder .text{font-size:14px;color:#666}
+        .video-placeholder .sub{font-size:11px;color:#444;margin-top:4px}
+        .stream-controls{padding:14px 20px;display:flex;gap:12px;flex-wrap:wrap;border-top:1px solid var(--bg)}
+        .stream-controls button{display:flex;align-items:center;gap:8px;padding:10px 20px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.3s;font-family:inherit}
+        .stream-controls .btn-start{background:var(--gradient-5g);color:#fff}
+        .stream-controls .btn-start:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(21,101,192,0.3)}
+        .stream-controls .btn-stop{background:#D32F2F;color:#fff}
+        .stream-controls .btn-stop:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(211,47,47,0.3)}
+        .stream-controls .btn-share{background:var(--bg);color:var(--tx);border:1px solid var(--bd)}
+        .stream-controls .btn-share:hover{background:#e8e8e8}
+        .stream-controls button:disabled{opacity:0.5;cursor:not-allowed;transform:none!important}
+        .stream-controls .status-indicator{display:flex;align-items:center;gap:8px;margin-left:auto;font-size:12px;color:var(--mu)}
+        .stream-controls .status-indicator .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+        .stream-controls .status-indicator .dot.offline{background:#D32F2F}
+        .stream-controls .status-indicator .dot.connecting{background:#F9A825;animation:pulse 0.8s infinite}
+        .stream-controls .status-indicator .dot.live{background:#4CAF50;animation:pulse 1.5s infinite}
+
+        /* ── SIDEBAR CONTROLS ── */
+        .controls-card{background:#fff;border-radius:var(--rl);border:1px solid var(--bd);box-shadow:var(--sh);padding:20px}
+        .controls-card .section-title{font-size:13px;font-weight:700;margin-bottom:14px}
+        .control-group{margin-bottom:16px}
+        .control-group label{font-size:11px;font-weight:600;color:var(--mu);display:block;margin-bottom:4px}
+        .control-group select,.control-group input{width:100%;padding:8px 12px;border:1.5px solid var(--bd);border-radius:8px;font-size:12px;font-family:inherit;outline:none;transition:border-color 0.2s}
+        .control-group select:focus,.control-group input:focus{border-color:var(--bl)}
+        .control-group select{padding:8px 10px}
+        .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+        .stat-item{background:var(--bg);border-radius:8px;padding:10px 12px;text-align:center}
+        .stat-item .label{font-size:9px;text-transform:uppercase;color:var(--mu);font-weight:600;letter-spacing:.4px}
+        .stat-item .value{font-size:18px;font-weight:800;color:var(--tx);margin-top:2px}
+        .stat-item .value.good{color:#4CAF50}
+        .stat-item .value.ok{color:#F9A825}
+        .stat-item .value.poor{color:#D32F2F}
+
+        .telemetry-item{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bg);font-size:12px}
+        .telemetry-item:last-child{border-bottom:none}
+        .telemetry-item .key{color:var(--mu)}
+        .telemetry-item .val{font-weight:600}
+
+        /* ── MOBILE QR CODE ── */
+        .qr-section{background:var(--bg);border-radius:10px;padding:16px;text-align:center;margin-top:12px}
+        .qr-section .qr-placeholder{width:100px;height:100px;background:#fff;border-radius:8px;margin:8px auto;display:flex;align-items:center;justify-content:center;font-size:40px;border:2px dashed var(--bd)}
+        .qr-section .qr-text{font-size:11px;color:var(--mu);margin-top:6px}
+        .qr-section .qr-url{font-size:10px;color:var(--bl);word-break:break-all;background:#fff;padding:4px 8px;border-radius:4px;margin-top:4px;font-family:monospace}
+
+        /* ── RESPONSIVE ── */
+        @media(max-width:1024px){.stream-grid{grid-template-columns:1fr}}
+        @media(max-width:768px){
+            .sidebar{width:60px}
+            .sidebar .sb-label,.sidebar .sb-item span,.sidebar .sb-footer .farm-name,.sidebar .sb-footer .farm-sub{display:none}
+            .sidebar .sb-item{padding:12px;justify-content:center}
+            .sidebar .sb-item svg{margin:0}
+            .content{padding:16px}
+            .hero-5g{padding:20px}
+            .hero-5g h2{font-size:20px}
+            .video-container{min-height:200px}
+            .stream-controls{flex-wrap:wrap}
+            .stream-controls .status-indicator{margin-left:0;width:100%}
+            .stats-grid{grid-template-columns:1fr 1fr}
+        }
+        @media(max-width:480px){
+            .hero-5g-content{flex-direction:column;text-align:center}
+            .controls-card .stats-grid{grid-template-columns:1fr}
+        }
+    </style>
+<script type="application/json" id="ice-servers-data">{{ ice_servers_json | default('null') | safe }}</script>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="sb-head">
+        <a href="/home" class="logo">
+            <div class="logo-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
+            AgroSense
+        </a>
+    </div>
+    <div class="sb-section">
+        <div class="sb-label">Overview</div>
+        <a href="/dashboard" class="sb-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</a>
+        <a href="/analytics" class="sb-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>Plant Analysis<span class="sb-badge" style="background:var(--gradient);color:#fff;">AI</span></a>
+    </div>
+    <div class="sb-section">
+        <div class="sb-label">Intelligence</div>
+        <a href="/recommendation" class="sb-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Crop Advice</a>
+        <a href="/livestream" class="sb-item active">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <circle cx="12" cy="12" r="3"/>
+                <line x1="2" y1="8" x2="6" y2="8"/>
+                <line x1="2" y1="12" x2="4" y2="12"/>
+                <line x1="2" y1="16" x2="6" y2="16"/>
+            </svg>
+            5G Live Stream
+            <span class="sb-badge">5G</span>
+        </a>
+        <a href="/architecture" class="sb-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Market Prices</a>
+    </div>
+    <a href="#" class="sb-item" onclick="logout()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</a>
+    <div class="sb-footer">
+        <div class="farm-card">
+            <div class="farm-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+            <div><div class="farm-name" id="farmName">Loading...</div><div class="farm-sub" id="farmDetails">Loading...</div></div>
+        </div>
+    </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+    <div class="topbar">
+        <div>
+            <div class="tb-title">📡 5G Live Stream</div>
+            <div class="tb-sub" id="ts">Real-time video streaming over 5G network</div>
+        </div>
+        <div class="tb-right">
+            <div class="av-btn"><span id="userInitial">U</span></div>
+        </div>
+    </div>
+
+    <div class="content">
+
+        <!-- 5G HERO BANNER -->
+        <div class="hero-5g">
+            <div class="hero-5g-content">
+                <div>
+                    <h2>📡 Live Field Monitoring <span>Powered by 5G — Ultra-low latency &lt;100ms</span></h2>
+                </div>
+                <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+                    <div class="badge-5g"><div class="dot"></div> 5G Connected</div>
+                    <span class="status-text" id="heroStatus">📱 Waiting for mobile...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- STREAM GRID -->
+        <div class="stream-grid">
+
+            <!-- VIDEO PLAYER -->
+            <div class="video-card">
+                <div class="card-head">
+                    <div><div class="card-title">📺 Live Video Feed</div><div class="card-sub" id="streamSourceLabel">Source: Field A</div></div>
+                    <span id="streamStatusBadge" style="font-size:11px;font-weight:600;color:#D32F2F;">🔴 Offline</span>
+                </div>
+                <div class="video-container">
+                    <video id="remoteVideo" autoplay playsinline></video>
+                    <div class="video-placeholder" id="streamPlaceholder">
+                        <div class="icon">📹</div>
+                        <div class="text">Waiting for stream...</div>
+                        <div class="sub">Open the mobile app to start streaming</div>
+                    </div>
+                    <div class="video-overlay">
+                        <div class="badge">📍 <span class="val" id="streamLocation">Field A</span></div>
+                        <div class="badge">📶 5G <span class="val" id="streamQuality">--</span></div>
+                        <div class="badge">⚡ <span class="val" id="streamLatency">--</span>ms</div>
+                    </div>
+                </div>
+                <div class="stream-controls">
+                    <button class="btn-start" id="startBtn" onclick="toggleStream()">▶ Start Stream</button>
+                    <button class="btn-stop" id="stopBtn" onclick="stopStream()" disabled>⏹ Stop</button>
+                    <button class="btn-share" onclick="shareMobileLink()">📱 Share Mobile Link</button>
+                    <div class="status-indicator">
+                        <span class="dot offline" id="statusDot"></span>
+                        <span id="statusText">Offline</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTROLS SIDEBAR -->
+            <div class="controls-card">
+                <div class="section-title">🎛️ Stream Controls</div>
+
+                <!-- Location -->
+                <div class="control-group">
+                    <label for="locationSelect">📍 Stream Location</label>
+                    <select id="locationSelect">
+                        <option value="Field A - North">Field A - North</option>
+                        <option value="Field A - South">Field A - South</option>
+                        <option value="Field B - East">Field B - East</option>
+                        <option value="Greenhouse">Greenhouse</option>
+                        <option value="Orchard">Orchard</option>
+                    </select>
+                </div>
+
+                <!-- Quality -->
+                <div class="control-group">
+                    <label for="qualitySelect">📊 Video Quality</label>
+                    <select id="qualitySelect" onchange="updateQuality()">
+                        <option value="720p">720p (HD)</option>
+                        <option value="1080p" selected>1080p (Full HD)</option>
+                        <option value="4K">4K (Ultra HD)</option>
+                    </select>
+                </div>
+
+                <!-- Stats -->
+                <div class="section-title" style="margin-top:12px">📊 Network Stats</div>
+                <div class="stats-grid">
+                    <div class="stat-item"><div class="label">Latency</div><div class="value good" id="statLatency">--ms</div></div>
+                    <div class="stat-item"><div class="label">Bandwidth</div><div class="value good" id="statBandwidth">--</div></div>
+                    <div class="stat-item"><div class="label">Signal</div><div class="value good" id="statSignal">5G</div></div>
+                    <div class="stat-item"><div class="label">Uptime</div><div class="value good" id="statUptime">00:00</div></div>
+                </div>
+
+                <!-- Telemetry -->
+                <div class="section-title" style="margin-top:12px">📡 Telemetry</div>
+                <div id="telemetryContainer">
+                    <div class="telemetry-item"><span class="key">Frame Rate</span><span class="val" id="tFps">-- fps</span></div>
+                    <div class="telemetry-item"><span class="key">Resolution</span><span class="val" id="tResolution">--</span></div>
+                    <div class="telemetry-item"><span class="key">Packets Lost</span><span class="val" id="tPackets">0%</span></div>
+                    <div class="telemetry-item"><span class="key">Bitrate</span><span class="val" id="tBitrate">--</span></div>
+                </div>
+
+                <!-- QR Code -->
+                <div class="qr-section">
+                    <div class="qr-placeholder" id="qrDisplay">📱</div>
+                    <div class="qr-text">Scan to open mobile stream</div>
+                    <div class="qr-url" id="mobileUrl">Loading...</div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+// ==========================================================
+// LOGIN CHECK
+// ==========================================================
+
+const user = JSON.parse(localStorage.getItem("user"));
+const farm = JSON.parse(localStorage.getItem("farm"));
+
+if (!user || !farm) {
+    window.location.href = "/login";
+}
+
+document.getElementById("userInitial").textContent = user.first_name.charAt(0).toUpperCase();
+document.getElementById("farmName").textContent = farm.farm_name || "My Farm";
+document.getElementById("farmDetails").textContent = 
+    `${farm.district || ""}, ${farm.state || ""} · ${farm.farm_size || 0} Acres`;
+
+// ==========================================================
+// TIMESTAMP
+// ==========================================================
+
+function setTimestamp(){
+    const now = new Date();
+    document.getElementById('ts').textContent = 'Real-time 5G streaming · ' + now.toLocaleTimeString('en-IN');
+}
+setTimestamp();
+setInterval(setTimestamp, 1000);
+
+// ==========================================================
+// WEBSOCKET CONNECTION - FIXED ICE EXCHANGE
+// ==========================================================
+
+// Use wss:// automatically when the page itself is loaded over https.
+// A hardcoded ws:// breaks the moment this is served over HTTPS (which is
+// required in production/over the public internet) because browsers block
+// insecure WebSocket connections from a secure page ("mixed content").
+const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+// Use the same host/port the page was loaded on instead of a hardcoded
+// port, so this keeps working behind a reverse proxy (443) too.
+const WS_PORT = window.location.port ? `:${window.location.port}` : '';
+const WS_DASHBOARD_URL = `${WS_PROTOCOL}//${window.location.hostname}${WS_PORT}/ws/dashboard`;
+
+let wsDashboard = null;
+let pcDashboard = null;
+let isStreamActive = false;
+let streamStartTime = 0;
+let uptimeInterval = null;
+let availableMobiles = [];
+let pairedMobile = null;
+let hasAutoPaired = false;
+let isProcessingOffer = false;
+let remoteStream = null;
+
+// DOM refs
+const remoteVideo = document.getElementById('remoteVideo');
+const streamPlaceholder = document.getElementById('streamPlaceholder');
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
+const statusText = document.getElementById('statusText');
+const statusDot = document.getElementById('statusDot');
+const streamStatusBadge = document.getElementById('streamStatusBadge');
+const streamLocation = document.getElementById('streamLocation');
+const streamQuality = document.getElementById('streamQuality');
+const streamLatency = document.getElementById('streamLatency');
+const heroStatus = document.getElementById('heroStatus');
+const locationSelect = document.getElementById('locationSelect');
+
+// Stats
+const statLatency = document.getElementById('statLatency');
+const statBandwidth = document.getElementById('statBandwidth');
+const statSignal = document.getElementById('statSignal');
+const statUptime = document.getElementById('statUptime');
+const tFps = document.getElementById('tFps');
+const tResolution = document.getElementById('tResolution');
+const tPackets = document.getElementById('tPackets');
+const tBitrate = document.getElementById('tBitrate');
+
+// ICE servers come from the server (main.py) so a TURN server can be
+// configured via env vars without editing this file. STUN alone is
+// usually NOT enough for a phone on 5G/cellular data — carrier networks
+// almost always sit behind Carrier-Grade NAT, which STUN can't traverse.
+// See NETWORK_SETUP.md.
+let ICE_SERVERS_LIST = [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' }
+];
+try {
+    const iceDataEl = document.getElementById('ice-servers-data');
+    const serverIce = iceDataEl ? JSON.parse(iceDataEl.textContent || 'null') : null;
+    if (serverIce && serverIce.length) ICE_SERVERS_LIST = serverIce;
+} catch (e) { /* fall back to STUN-only above */ }
+
+const STUN_SERVERS = {
+    iceServers: ICE_SERVERS_LIST,
+    iceCandidatePoolSize: 10
+};
+
+// ==========================================================
+// CONNECT TO SIGNALING SERVER
+// ==========================================================
+
+function connectDashboardWebSocket() {
+    console.log('🔌 Connecting to WebSocket:', WS_DASHBOARD_URL);
+    heroStatus.textContent = '🔌 Connecting to server...';
+    
+    try {
+        wsDashboard = new WebSocket(WS_DASHBOARD_URL);
+        
+        wsDashboard.onopen = function() {
+            console.log('✅ Dashboard WebSocket connected');
+            heroStatus.textContent = '📡 Connected, waiting for mobile...';
+            showToast('✅ Connected to signaling server', 'success');
+            wsDashboard.send(JSON.stringify({ type: 'get_mobiles' }));
+        };
+        
+        wsDashboard.onmessage = async function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                console.log('📨 Received:', data.type);
+                
+                if (data.type === 'connected') {
+                    console.log('✅ Dashboard ID:', data.client_id);
+                    availableMobiles = data.available_mobiles || [];
+                    console.log('📱 Available mobiles:', availableMobiles);
+                    
+                    if (availableMobiles.length > 0 && !hasAutoPaired) {
+                        heroStatus.textContent = `📱 ${availableMobiles.length} mobile(s) available`;
+                        showToast(`📱 ${availableMobiles.length} mobile(s) available`, 'success');
+                        const mobileId = availableMobiles[0].id;
+                        autoPairWithMobile(mobileId);
+                    }
+                }
+                
+                if (data.type === 'mobile_list') {
+                    availableMobiles = data.mobiles || [];
+                    console.log('📱 Updated mobiles:', availableMobiles);
+                    
+                    if (availableMobiles.length > 0 && !hasAutoPaired) {
+                        heroStatus.textContent = `📱 ${availableMobiles.length} mobile(s) available`;
+                        const mobileId = availableMobiles[0].id;
+                        autoPairWithMobile(mobileId);
+                    } else if (availableMobiles.length === 0) {
+                        heroStatus.textContent = '📱 Waiting for mobile...';
+                    }
+                }
+                
+                if (data.type === 'mobile_connected') {
+                    console.log('📱 New mobile connected:', data.mobile_id);
+                    heroStatus.textContent = '🟢 Mobile connected!';
+                    showToast('📱 New mobile connected!', 'success');
+                    
+                    if (wsDashboard && wsDashboard.readyState === WebSocket.OPEN) {
+                        wsDashboard.send(JSON.stringify({ type: 'get_mobiles' }));
+                    }
+                    
+                    if (data.mobile_id && !hasAutoPaired) {
+                        autoPairWithMobile(data.mobile_id);
+                    }
+                }
+                
+                if (data.type === 'offer') {
+                    console.log('📩 Received offer from mobile');
+                    if (!isProcessingOffer) {
+                        isProcessingOffer = true;
+                        await handleOffer(data.offer);
+                        isProcessingOffer = false;
+                    }
+                }
+                
+                if (data.type === 'ice_candidate') {
+                    console.log('🧊 Received ICE candidate');
+                    if (pcDashboard) {
+                        try {
+                            await pcDashboard.addIceCandidate(new RTCIceCandidate(data.candidate));
+                            console.log('✅ ICE candidate added');
+                        } catch(e) {
+                            console.log('⚠️ ICE candidate error:', e);
+                        }
+                    }
+                }
+                
+                if (data.type === 'paired') {
+                    console.log('🔗 Paired with mobile:', data.mobile_id);
+                    pairedMobile = data.mobile_id;
+                    hasAutoPaired = true;
+                    heroStatus.textContent = '🔗 Paired with mobile!';
+                    showToast('🔗 Paired successfully!', 'success');
+                    
+                    startBtn.disabled = false;
+                    startBtn.textContent = '▶ Start Stream';
+                    startBtn.className = 'btn-start';
+                    
+                    setTimeout(() => {
+                        if (!isStreamActive) {
+                            console.log('🚀 Auto-starting stream...');
+                            startStream();
+                        }
+                    }, 1000);
+                }
+                
+            } catch (e) {
+                console.error('WebSocket message error:', e);
+            }
+        };
+        
+        wsDashboard.onclose = function() {
+            console.log('⚠️ WebSocket disconnected');
+            heroStatus.textContent = '🔴 Disconnected';
+            updateStatus(false);
+            hasAutoPaired = false;
+            setTimeout(connectDashboardWebSocket, 3000);
+        };
+        
+        wsDashboard.onerror = function(error) {
+            console.error('WebSocket error:', error);
+            heroStatus.textContent = '❌ Connection error';
+            showToast('❌ WebSocket connection error', 'error');
+        };
+        
+    } catch (e) {
+        console.error('Failed to connect WebSocket:', e);
+        heroStatus.textContent = '❌ Failed to connect';
+        setTimeout(connectDashboardWebSocket, 5000);
+    }
+}
+
+// ==========================================================
+// AUTO-PAIR WITH MOBILE
+// ==========================================================
+
+function autoPairWithMobile(mobileId) {
+    if (!mobileId) {
+        console.log('❌ No mobile ID to pair');
+        return;
+    }
+    
+    if (pairedMobile === mobileId) {
+        console.log('✅ Already paired with:', mobileId);
+        return;
+    }
+    
+    console.log('🔗 Auto-pairing with mobile:', mobileId);
+    
+    if (wsDashboard && wsDashboard.readyState === WebSocket.OPEN) {
+        wsDashboard.send(JSON.stringify({
+            type: 'pair',
+            mobile_id: mobileId
+        }));
+        console.log('✅ Pair request sent');
+        showToast(`🔗 Pairing with mobile...`, 'info');
+    } else {
+        console.log('❌ WebSocket not connected');
+        setTimeout(() => autoPairWithMobile(mobileId), 1000);
+    }
+}
+
+// ==========================================================
+// HANDLE OFFER - FIXED ICE CANDIDATE EXCHANGE
+// ==========================================================
+
+async function handleOffer(offer) {
+    try {
+        console.log('📩 Handling offer...');
+        
+        pcDashboard = new RTCPeerConnection(STUN_SERVERS);
+        
+        // --- Handle incoming video ---
+        pcDashboard.ontrack = function(event) {
+            console.log('📺 Video track received!');
+            remoteVideo.srcObject = event.streams[0];
+            streamPlaceholder.style.display = 'none';
+            isStreamActive = true;
+            streamStartTime = Date.now();
+            updateStatus(true);
+            
+            if (uptimeInterval) clearInterval(uptimeInterval);
+            uptimeInterval = setInterval(updateUptime, 1000);
+            
+            monitorLatency();
+            showToast('📡 Stream is live!', 'success');
+            heroStatus.textContent = '🟢 LIVE!';
+            console.log('✅ Stream is LIVE!');
+        };
+        
+        // --- Send ICE candidates to mobile ---
+        pcDashboard.onicecandidate = function(event) {
+            if (event.candidate && wsDashboard && wsDashboard.readyState === WebSocket.OPEN) {
+                const candidateMsg = {
+                    type: 'ice_candidate',
+                    candidate: event.candidate,
+                    target: pairedMobile   // must be the real mobile client_id, not the literal string 'mobile'
+                };
+                wsDashboard.send(JSON.stringify(candidateMsg));
+                console.log('📤 Sent ICE candidate to mobile:', pairedMobile);
+            }
+        };
+        
+        // --- Monitor connection state ---
+        pcDashboard.onconnectionstatechange = function() {
+            console.log('🔗 Connection state:', pcDashboard.connectionState);
+            if (pcDashboard.connectionState === 'connected') {
+                streamQuality.textContent = 'Excellent';
+                heroStatus.textContent = '🟢 Live!';
+                showToast('📡 Stream is live!', 'success');
+                console.log('✅ WebRTC CONNECTED!');
+            } else if (pcDashboard.connectionState === 'disconnected') {
+                isStreamActive = false;
+                updateStatus(false);
+                showToast('⚠️ Stream disconnected', 'error');
+                console.log('⚠️ WebRTC disconnected');
+            } else if (pcDashboard.connectionState === 'failed') {
+                console.log('❌ WebRTC failed - restarting');
+                // Attempt to restart
+                pcDashboard.restartIce();
+            }
+        };
+        
+        // --- Monitor ICE connection ---
+        pcDashboard.oniceconnectionstatechange = function() {
+            console.log('🧊 ICE state:', pcDashboard.iceConnectionState);
+            if (pcDashboard.iceConnectionState === 'connected') {
+                console.log('✅ ICE connected!');
+            }
+            if (pcDashboard.iceConnectionState === 'failed') {
+                console.log('❌ ICE failed - restarting');
+                pcDashboard.restartIce();
+            }
+        };
+        
+        // --- Set remote description ---
+        await pcDashboard.setRemoteDescription(new RTCSessionDescription(offer));
+        console.log('✅ Remote description set');
+        
+        // --- Create answer ---
+        const answer = await pcDashboard.createAnswer();
+        await pcDashboard.setLocalDescription(answer);
+        console.log('✅ Local description set');
+        
+        // --- Send answer to mobile ---
+        if (wsDashboard && wsDashboard.readyState === WebSocket.OPEN) {
+            wsDashboard.send(JSON.stringify({
+                type: 'answer',
+                answer: answer,
+                target: pairedMobile   // must be the real mobile client_id, not the literal string 'mobile'
+            }));
+            console.log('✅ Answer sent to mobile:', pairedMobile);
+        }
+        
+        // --- Wait for ICE gathering to complete ---
+        await new Promise((resolve) => {
+            if (pcDashboard.iceGatheringState === 'complete') {
+                resolve();
+            } else {
+                pcDashboard.onicegatheringstatechange = () => {
+                    if (pcDashboard.iceGatheringState === 'complete') {
+                        resolve();
+                    }
+                };
+            }
+        });
+        console.log('✅ ICE gathering complete');
+        
+    } catch (e) {
+        console.error('❌ Handle offer error:', e);
+        showToast('❌ Error handling stream: ' + e.message, 'error');
+    }
+}
+
+// ==========================================================
+// START / STOP STREAM
+// ==========================================================
+
+function startStream() {
+    if (pairedMobile) {
+        console.log('🎥 Starting stream with paired mobile:', pairedMobile);
+        heroStatus.textContent = '📡 Connecting...';
+        statusText.textContent = 'Connecting';
+        statusDot.className = 'dot connecting';
+        streamStatusBadge.textContent = '⏳ Connecting';
+        streamStatusBadge.style.color = '#F9A825';
+        startBtn.disabled = true;
+        startBtn.textContent = '⏳ Connecting...';
+        
+        streamLocation.textContent = locationSelect.value;
+        document.getElementById('streamSourceLabel').textContent = 'Source: ' + locationSelect.value;
+        
+        showToast('📡 Waiting for mobile stream...', 'info');
+        
+        setTimeout(() => {
+            if (!isStreamActive) {
+                startBtn.disabled = false;
+                startBtn.textContent = '▶ Start Stream';
+                startBtn.className = 'btn-start';
+                startBtn.onclick = toggleStream;
+                heroStatus.textContent = '📱 Waiting for mobile...';
+                showToast('💡 Make sure mobile is streaming', 'info');
+            }
+        }, 15000);
+        
+    } else {
+        showToast('⚠️ No mobile paired. Waiting for mobile...', 'error');
+        if (availableMobiles.length > 0) {
+            autoPairWithMobile(availableMobiles[0].id);
+        } else {
+            if (wsDashboard && wsDashboard.readyState === WebSocket.OPEN) {
+                wsDashboard.send(JSON.stringify({ type: 'get_mobiles' }));
+            }
+        }
+    }
+}
+
+function stopStream() {
+    if (pcDashboard) {
+        pcDashboard.close();
+        pcDashboard = null;
+    }
+    remoteVideo.srcObject = null;
+    streamPlaceholder.style.display = 'flex';
+    streamPlaceholder.querySelector('.text').textContent = 'Stream stopped';
+    streamPlaceholder.querySelector('.sub').textContent = 'Click Start Stream to reconnect';
+    updateStatus(false);
+    streamLatency.textContent = '--';
+    statLatency.textContent = '--ms';
+    statBandwidth.textContent = '--';
+    tFps.textContent = '-- fps';
+    tBitrate.textContent = '--';
+    showToast('⏹ Stream stopped', 'info');
+}
+
+function toggleStream() {
+    if (isStreamActive) {
+        stopStream();
+    } else {
+        startStream();
+    }
+}
+
+// ==========================================================
+// UPDATE STATUS
+// ==========================================================
+
+function updateStatus(active) {
+    isStreamActive = active;
+    
+    if (active) {
+        statusText.textContent = 'Live';
+        statusDot.className = 'dot live';
+        streamStatusBadge.textContent = '🟢 Live';
+        streamStatusBadge.style.color = '#4CAF50';
+        startBtn.textContent = '⏹ Stop Stream';
+        startBtn.className = 'btn-stop';
+        startBtn.onclick = stopStream;
+        stopBtn.disabled = false;
+        heroStatus.textContent = '🟢 Live Streaming';
+        heroStatus.style.color = '#4CAF50';
+    } else {
+        statusText.textContent = 'Offline';
+        statusDot.className = 'dot offline';
+        streamStatusBadge.textContent = '🔴 Offline';
+        streamStatusBadge.style.color = '#D32F2F';
+        startBtn.textContent = '▶ Start Stream';
+        startBtn.className = 'btn-start';
+        startBtn.onclick = toggleStream;
+        stopBtn.disabled = true;
+        heroStatus.textContent = '📱 Waiting for mobile...';
+        heroStatus.style.color = 'rgba(255,255,255,0.8)';
+        if (!remoteVideo.srcObject) {
+            streamPlaceholder.style.display = 'flex';
+        }
+        if (uptimeInterval) {
+            clearInterval(uptimeInterval);
+            uptimeInterval = null;
+        }
+        statUptime.textContent = '00:00';
+    }
+}
+
+// ==========================================================
+// MONITOR LATENCY
+// ==========================================================
+
+let frameCount = 0;
+let fpsInterval = null;
+
+function monitorLatency() {
+    let lastTimestamp = Date.now();
+    
+    remoteVideo.ontimeupdate = function() {
+        const now = Date.now();
+        const latency = now - lastTimestamp;
+        
+        if (latency > 0 && latency < 2000) {
+            streamLatency.textContent = latency;
+            statLatency.textContent = latency + 'ms';
+            
+            var color = '#4CAF50';
+            var status = 'Excellent';
+            if (latency > 300) { color = '#D32F2F'; status = 'Poor'; }
+            else if (latency > 150) { color = '#F9A825'; status = 'Good'; }
+            
+            streamLatency.style.color = color;
+            statLatency.style.color = color;
+            streamQuality.textContent = status;
+        }
+        lastTimestamp = now;
+        
+        frameCount++;
+        if (!fpsInterval) {
+            fpsInterval = setInterval(function() {
+                tFps.textContent = frameCount + ' fps';
+                frameCount = 0;
+            }, 1000);
+        }
+    };
+}
+
+// ==========================================================
+// UPDATE UPTIME
+// ==========================================================
+
+function updateUptime() {
+    if (!streamStartTime) return;
+    var seconds = Math.floor((Date.now() - streamStartTime) / 1000);
+    var mins = String(Math.floor(seconds / 60)).padStart(2, '0');
+    var secs = String(seconds % 60).padStart(2, '0');
+    statUptime.textContent = mins + ':' + secs;
+}
+
+// ==========================================================
+// SHARE MOBILE LINK
+// ==========================================================
+
+function shareMobileLink() {
+    var url = window.location.origin + '/livestream/mobile?location=' + encodeURIComponent(locationSelect.value);
+    
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(function() {
+            showToast('✅ Mobile link copied to clipboard!', 'success');
+        }).catch(function() {
+            showToast('📱 Mobile link: ' + url, 'info');
+        });
+    } else {
+        showToast('📱 Mobile link: ' + url, 'info');
+    }
+    
+    document.getElementById('mobileUrl').textContent = url;
+}
+
+function updateQuality() {
+    var quality = document.getElementById('qualitySelect').value;
+    showToast('📊 Quality set to ' + quality, 'info');
+}
+
+// ==========================================================
+// TOAST NOTIFICATIONS
+// ==========================================================
+
+function showToast(message, type) {
+    if (type === undefined) type = 'info';
+    var existing = document.querySelector('.toast-notification');
+    if (existing) existing.remove();
+    
+    var toastEl = document.createElement('div');
+    toastEl.className = 'toast-notification';
+    var colors = { success: '#4CAF50', error: '#D32F2F', info: '#1565C0' };
+    toastEl.style.cssText = `
+        position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+        background: #1a1a2e; color: #fff; padding: 12px 24px;
+        border-radius: 10px; font-size: 13px; z-index: 999;
+        border-left: 4px solid ${colors[type] || '#1565C0'};
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        animation: slide-up 0.3s ease;
+        max-width: 90%;
+        text-align: center;
+    `;
+    toastEl.textContent = message;
+    document.body.appendChild(toastEl);
+    
+    setTimeout(function() {
+        toastEl.style.opacity = '0';
+        toastEl.style.transition = 'opacity 0.3s';
+        setTimeout(function() { toastEl.remove(); }, 300);
+    }, 4000);
+}
+
+// ==========================================================
+// SIMULATE BANDWIDTH (Demo)
+// ==========================================================
+
+function simulateBandwidth() {
+    if (!isStreamActive) return;
+    var bw = (Math.random() * 300 + 200).toFixed(1);
+    statBandwidth.textContent = bw + ' Mbps';
+    var signal = Math.random() > 0.2 ? '5G' : '4G';
+    statSignal.textContent = signal;
+    tBitrate.textContent = (Math.random() * 8 + 2).toFixed(1) + ' Mbps';
+    tPackets.textContent = (Math.random() * 2).toFixed(1) + '%';
+}
+
+// ==========================================================
+// INITIALIZATION
+// ==========================================================
+
+locationSelect.addEventListener('change', function() {
+    streamLocation.textContent = locationSelect.value;
+    document.getElementById('streamSourceLabel').textContent = 'Source: ' + locationSelect.value;
+});
+
+document.getElementById('mobileUrl').textContent = window.location.origin + '/livestream/mobile';
+
+connectDashboardWebSocket();
+
+setInterval(simulateBandwidth, 2000);
+
+console.log('🌾 AgroSense 5G Live Stream ready');
+console.log('📱 Mobile URL:', window.location.origin + '/livestream/mobile');
+console.log('🔌 WebSocket URL:', WS_DASHBOARD_URL);
+
+function logout() {
+    localStorage.clear();
+    window.location.href = '/login';
+}
+</script>
+
+</body>
+</html>
