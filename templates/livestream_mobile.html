@@ -295,44 +295,119 @@
         // CAMERA
         // ==========================================================
         
+        // Human-readable message + whether to show the "allow camera" overlay,
+        // keyed off e.name (standardized across browsers) instead of e.message
+        // (which varies by browser/locale and is unreliable to match on).
+        function describeCameraError(e) {
+            switch (e.name) {
+                case 'NotAllowedError':
+                case 'PermissionDeniedError':
+                    return { text: 'Camera permission denied', showOverlay: true };
+                case 'NotFoundError':
+                case 'DevicesNotFoundError':
+                    return { text: 'No camera found on this device', showOverlay: false };
+                case 'NotReadableError':
+                case 'TrackStartError':
+                    return { text: 'Camera is already in use by another app/tab. Close other camera apps or tabs and try again.', showOverlay: false };
+                case 'OverconstrainedError':
+                case 'ConstraintNotSatisfiedError':
+                    return { text: 'Camera does not support the requested settings', showOverlay: false };
+                case 'SecurityError':
+                    return { text: 'Blocked by browser security policy (must be HTTPS)', showOverlay: false };
+                case 'TypeError':
+                    return { text: 'Camera API not available in this browser/WebView', showOverlay: false };
+                default:
+                    return { text: e.message || 'Unknown camera error', showOverlay: false };
+            }
+        }
+
+        // navigator.mediaDevices.getUserMedia can be entirely undefined on:
+        // old browsers, non-HTTPS/non-localhost origins, and many in-app
+        // WebViews (hybrid apps). This check turns a cryptic
+        // "Cannot read properties of undefined" into a clear message.
+        function cameraApiAvailable() {
+            const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+            if (window.location.protocol !== 'https:' && !isLocalhost) {
+                log('❌ Camera API blocked: page is not served over HTTPS');
+                return false;
+            }
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                log('❌ Camera API not available (old browser or in-app WebView)');
+                return false;
+            }
+            return true;
+        }
+
         async function requestCameraPermission() {
             permissionOverlay.classList.remove('active');
+            if (!cameraApiAvailable()) return;
             try {
-                const testStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const testStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
                 testStream.getTracks().forEach(track => track.stop());
                 log('✅ Camera permission granted');
                 startBtn.disabled = false;
             } catch(e) {
-                log('❌ Permission denied: ' + e.message);
-                permissionOverlay.classList.add('active');
+                const info = describeCameraError(e);
+                log('❌ ' + info.text);
+                if (info.showOverlay) permissionOverlay.classList.add('active');
             }
         }
         
         async function getCamera() {
+            if (!cameraApiAvailable()) return null;
+
             try {
-                try {
-                    const perm = await navigator.permissions.query({ name: 'camera' });
-                    if (perm.state === 'denied') {
-                        permissionOverlay.classList.add('active');
-                        return null;
-                    }
-                } catch(e) {}
-                
-                const constraints = {
-                    video: {
-                        facingMode: 'environment',
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    },
-                    audio: false
-                };
-                
-                return await navigator.mediaDevices.getUserMedia(constraints);
-            } catch(e) {
-                log(`❌ Camera error: ${e.message}`);
-                if (e.message.includes('Permission')) {
+                const perm = await navigator.permissions.query({ name: 'camera' });
+                // Some browsers don't support the Permissions API for 'camera'
+                // (query throws) — that's fine, we just skip this pre-check
+                // and let getUserMedia itself report the real state below.
+                if (perm.state === 'denied') {
                     permissionOverlay.classList.add('active');
+                    log('❌ Camera permission previously denied');
+                    return null;
                 }
+            } catch(e) { /* Permissions API not supported — fall through */ }
+
+            const idealConstraints = {
+                video: {
+                    facingMode: 'environment',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                },
+                audio: false   // requesting audio+video together means an audio
+                                // denial can fail the whole call — keep video-only
+            };
+
+            try {
+                return await navigator.mediaDevices.getUserMedia(idealConstraints);
+            } catch(e) {
+                const info = describeCameraError(e);
+                log(`❌ Camera error: ${info.text}`);
+
+                if (info.showOverlay) {
+                    permissionOverlay.classList.add('active');
+                    return null;
+                }
+
+                // OverconstrainedError: the device can't do 1280x720 with
+                // facingMode 'environment' (common on some Android devices).
+                // Retry with progressively looser constraints instead of
+                // giving up outright.
+                if (e.name === 'OverconstrainedError' || e.name === 'ConstraintNotSatisfiedError') {
+                    try {
+                        log('🔄 Retrying camera with relaxed constraints...');
+                        return await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+                    } catch (e2) {
+                        try {
+                            log('🔄 Retrying with default camera...');
+                            return await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                        } catch (e3) {
+                            log(`❌ Camera error: ${describeCameraError(e3).text}`);
+                            return null;
+                        }
+                    }
+                }
+
                 return null;
             }
         }
